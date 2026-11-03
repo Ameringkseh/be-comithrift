@@ -1,0 +1,40 @@
+# PROGRESS.md — Log Pengerjaan Backend COMITHRIFT
+
+Antigravity: perbarui file ini setiap selesai satu task dari `PLAN.md`.
+Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
+
+## Status fase
+
+| Fase | Nama                              | Status        |
+| ---- | ---------------------------------- | ------------- |
+| 0    | Scaffolding                        | Selesai & diuji |
+| 1    | Skema basis data & migrasi         | Sedang dikerjakan |
+| 2    | Autentikasi & middleware peran     | Belum mulai   |
+| 3    | Endpoint produk & katalog          | Belum mulai   |
+| 4    | Pesanan, checkout, status          | Belum mulai   |
+| 5    | Pengujian API & koleksi Postman    | Belum mulai   |
+| 6    | Opsional (Midtrans)                | Tidak dikerjakan — menunggu izin pembimbing |
+
+(Ubah status jadi: `Belum mulai` / `Sedang dikerjakan` / `Selesai, belum diuji` / `Selesai & diuji`.)
+
+## Log task
+
+| Tanggal    | Task (kode) | Ringkasan perubahan                                                        | Commit | Diuji? (skenario)      |
+| ---------- | ----------- | -------------------------------------------------------------------------- | ------ | ---------------------- |
+| 2026-11-04 | 0.1–0.5     | Scaffolding project: Go module, config, db pooler, healthz, env, & postman |        | go build & go vet pass |
+| 2026-11-04 | 1.1–1.6     | Definisi model GORM: Produk, Pesanan, ItemPesanan, PenyaluranDonasi, ProfilPengguna, InfoProgram |        | go build & go vet pass |
+
+## Temuan review silang (dari rekan frontend / Postman)
+
+| Tanggal | Endpoint | Masalah | Status |
+| ------- | -------- | ------- | ------ |
+|         |          |         |        |
+
+## Keputusan yang masih perlu dikonfirmasi ke pembimbing
+
+- [ ] Batas waktu pembatalan pesanan yang tidak dibayar (usulan awal di
+      proposal: 24 jam, diterapkan manual oleh Admin — lihat Tabel 2.6).
+- [ ] Aturan transisi status pesanan persis (lihat skill
+      `order-status-lifecycle`, state machine di sana masih usulan
+      implementasi, bukan kutipan literal proposal).
+- [ ] (tambahkan item lain di sini seiring berjalan)

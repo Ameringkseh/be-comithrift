@@ -1,9 +1,18 @@
-# Dependencies
-.psci_modules
-.spago
-bower_components
-node_modules
+# Secrets
+.env
+.env.local
 
-# Generated files
-.psci
-output
+# Go
+/bin/
+*.exe
+*.test
+*.out
+
+# Postman — jangan commit environment yang terisi token asli kalau kamu
+# membuat salinan lokal berbeda dari yang di-track git.
+postman/*.local.json
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
