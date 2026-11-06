@@ -17,8 +17,19 @@ func main() {
 	cfg := config.LoadConfig()
 
 	// Inisialisasi koneksi DB (jangan crash jika belum dikonfigurasi saat dev lokal)
-	if _, err := db.InitDB(cfg.DatabaseURL, cfg.Env); err != nil {
+	gormDB, err := db.InitDB(cfg.DatabaseURL, cfg.Env)
+	if err != nil {
 		log.Printf("Peringatan inisialisasi DB: %v\n", err)
+	} else {
+		// Jalankan AutoMigrate dan Seeding data awal saat DB terhubung
+		if err := db.AutoMigrate(gormDB); err != nil {
+			log.Printf("Peringatan migrasi DB: %v\n", err)
+		}
+		if cfg.Env == "development" {
+			if err := db.SeedData(gormDB); err != nil {
+				log.Printf("Peringatan seed DB: %v\n", err)
+			}
+		}
 	}
 
 	app := fiber.New(fiber.Config{

@@ -8,7 +8,7 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | Fase | Nama                              | Status        |
 | ---- | ---------------------------------- | ------------- |
 | 0    | Scaffolding                        | Selesai & diuji |
-| 1    | Skema basis data & migrasi         | Sedang dikerjakan |
+| 1    | Skema basis data & migrasi         | Selesai & diuji |
 | 2    | Autentikasi & middleware peran     | Belum mulai   |
 | 3    | Endpoint produk & katalog          | Belum mulai   |
 | 4    | Pesanan, checkout, status          | Belum mulai   |
@@ -23,6 +23,7 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | ---------- | ----------- | -------------------------------------------------------------------------- | ------ | ---------------------- |
 | 2026-11-04 | 0.1–0.5     | Scaffolding project: Go module, config, db pooler, healthz, env, & postman |        | go build & go vet pass |
 | 2026-11-04 | 1.1–1.6     | Definisi model GORM: Produk, Pesanan, ItemPesanan, PenyaluranDonasi, ProfilPengguna, InfoProgram |        | go build & go vet pass |
+| 2026-11-05 | 1.7–1.8     | Migrasi GORM + SQL up/down dengan CHECK constraints, serta seed data uji fiktif |        | go build & go vet pass |
 
 ## Temuan review silang (dari rekan frontend / Postman)
 

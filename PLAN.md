@@ -58,9 +58,9 @@ direncanakan" di Subbab 3.4 proposal.
       sandi** (dikelola Supabase Auth).
 - [x] **1.6** Model GORM `InfoProgram` — nama_yayasan, deskripsi_program,
       info_pembayaran, kontak_whatsapp_admin. Satu baris konfigurasi.
-- [ ] **1.7** Migrasi: constraint harga > 0, nominal_donasi ≥ 0, nominal
+- [x] **1.7** Migrasi: constraint harga > 0, nominal_donasi ≥ 0, nominal
       penyaluran ≥ 0 (lihat `.agents/rules/20-data-model.md`).
-- [ ] **1.8** Seed data uji fiktif minimal (beberapa produk, satu info_program)
+- [x] **1.8** Seed data uji fiktif minimal (beberapa produk, satu info_program)
       untuk dipakai testing lokal — jangan data pribadi nyata (sesuai
       batasan proyek).
 
