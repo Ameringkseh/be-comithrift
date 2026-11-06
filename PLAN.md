@@ -68,7 +68,7 @@ direncanakan" di Subbab 3.4 proposal.
 
 - [x] **2.1** Middleware verifikasi JWT Supabase Auth pada setiap request ke
       `/api/admin/*`. Lihat skill `supabase-jwt-auth-middleware`.
-- [ ] **2.2** Middleware pemeriksaan peran (Admin vs Relawan) berdasarkan
+- [x] **2.2** Middleware pemeriksaan peran (Admin vs Relawan) berdasarkan
       `profil_pengguna.peran`, dijalankan setelah middleware JWT.
       Target hasil: **401** kalau token tidak ada/tidak valid, **403** kalau
       token valid tapi peran tidak berwenang (mendukung skenario P-04, P-05).

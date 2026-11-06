@@ -9,7 +9,7 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | ---- | ---------------------------------- | ------------- |
 | 0    | Scaffolding                        | Selesai & diuji |
 | 1    | Skema basis data & migrasi         | Selesai & diuji |
-| 2    | Autentikasi & middleware peran     | Sedang dikerjakan |
+| 2    | Autentikasi & middleware peran     | Selesai & diuji |
 | 3    | Endpoint produk & katalog          | Belum mulai   |
 | 4    | Pesanan, checkout, status          | Belum mulai   |
 | 5    | Pengujian API & koleksi Postman    | Belum mulai   |
@@ -25,6 +25,7 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | 2026-11-04 | 1.1–1.6     | Definisi model GORM: Produk, Pesanan, ItemPesanan, PenyaluranDonasi, ProfilPengguna, InfoProgram |        | go build & go vet pass |
 | 2026-11-05 | 1.7–1.8     | Migrasi GORM + SQL up/down dengan CHECK constraints, serta seed data uji fiktif |        | go build & go vet pass |
 | 2026-11-07 | 2.1         | Middleware VerifyJWT verifikasi signature HS256 Supabase & ekstraksi user_id | c1eb863 | go test (PASS) & go build/vet pass |
+| 2026-11-07 | 2.2         | Middleware RequireRole verifikasi peran (Admin vs Relawan) via DB (401 vs 403) |        | go test (PASS) & go build/vet pass |
 
 ## Temuan review silang (dari rekan frontend / Postman)
 
