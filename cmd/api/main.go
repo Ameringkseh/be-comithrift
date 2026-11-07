@@ -24,9 +24,9 @@ func main() {
 	if err != nil {
 		log.Printf("Peringatan inisialisasi DB: %v\n", err)
 	} else {
-		// Jalankan AutoMigrate dan Seeding data awal saat DB terhubung
+		// Jalankan AutoMigrate. Jika gagal, hentikan startup untuk mencegah error berantai pada seed
 		if err := db.AutoMigrate(gormDB); err != nil {
-			log.Printf("Peringatan migrasi DB: %v\n", err)
+			log.Fatalf("Gagal menjalankan migrasi database: %v", err)
 		}
 		if cfg.Env == "development" {
 			if err := db.SeedData(gormDB); err != nil {

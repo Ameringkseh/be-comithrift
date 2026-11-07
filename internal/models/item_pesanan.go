@@ -10,7 +10,8 @@ type ItemPesanan struct {
 	IDPesanan      uint      `gorm:"column:id_pesanan;not null;index" json:"id_pesanan"`
 	IDProduk       uint      `gorm:"column:id_produk;not null;index" json:"id_produk"`
 	HargaSaatPesan int64     `gorm:"column:harga_saat_pesan;not null;check:harga_saat_pesan > 0" json:"harga_saat_pesan"`
-	Produk         *Produk   `gorm:"foreignKey:IDProduk;references:IDProduk" json:"produk,omitempty"`
+	Pesanan        *Pesanan  `gorm:"belongsTo:Pesanan;foreignKey:IDPesanan;references:IDPesanan" json:"pesanan,omitempty"`
+	Produk         *Produk   `gorm:"belongsTo:Produk;foreignKey:IDProduk;references:IDProduk" json:"produk,omitempty"`
 	CreatedAt      time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }
