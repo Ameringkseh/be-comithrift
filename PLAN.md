@@ -77,15 +77,15 @@ direncanakan" di Subbab 3.4 proposal.
 
 Dari Tabel 3.7.
 
-- [ ] **3.1** `GET /api/produk` — publik, filter kategori & ukuran via query
+- [x] **3.1** `GET /api/produk` — publik, filter kategori & ukuran via query
       param, hanya tampilkan field yang relevan untuk katalog. (F-01, P-01)
-- [ ] **3.2** `GET /api/produk/{id}` — publik, detail satu produk. (F-01)
-- [ ] **3.3** `POST /api/admin/produk` — Relawan/Admin, terima metadata foto
+- [x] **3.2** `GET /api/produk/{id}` — publik, detail satu produk. (F-01)
+- [x] **3.3** `POST /api/admin/produk` — Relawan/Admin, terima metadata foto
       (path/URL yang sudah diupload frontend ke Storage), **bukan** file
       binary. (F-06)
-- [ ] **3.4** `PATCH /api/admin/produk/{id}` — Relawan/Admin, ubah data atau
+- [x] **3.4** `PATCH /api/admin/produk/{id}` — Relawan/Admin, ubah data atau
       status ketersediaan. (F-06)
-- [ ] **3.5** `DELETE /api/admin/produk/{id}` — Relawan/Admin. (F-06)
+- [x] **3.5** `DELETE /api/admin/produk/{id}` — Relawan/Admin. (F-06)
 - [ ] **3.6** Jalankan T-10 (kelola produk) secara manual dan skenario
       filter dari T-01.
 

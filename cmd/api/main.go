@@ -6,6 +6,9 @@ import (
 	"be-comithrift/internal/config"
 	"be-comithrift/internal/db"
 	"be-comithrift/internal/handlers"
+	"be-comithrift/internal/middleware"
+	"be-comithrift/internal/models"
+	"be-comithrift/internal/services"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -47,9 +50,28 @@ func main() {
 	// Endpoint Health-check (Fase 0.3)
 	app.Get("/healthz", handlers.HealthCheckHandler)
 
+	// Inisialisasi Service & Handler Produk
+	produkService := services.NewProdukService(gormDB)
+	produkHandler := handlers.NewProdukHandler(produkService)
+
+	// Route Publik Produk (Tabel 3.7 & Task 3.1, 3.2)
+	api := app.Group("/api")
+	api.Get("/produk", produkHandler.GetList)
+	api.Get("/produk/:id", produkHandler.GetByID)
+
+	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
+	admin := api.Group("/admin")
+	admin.Use(middleware.VerifyJWT(cfg.SupabaseJWTSecret))
+
+	// Endpoint produk dapat diakses oleh Relawan dan Admin
+	produkAdmin := admin.Group("/produk")
+	produkAdmin.Use(middleware.RequireRole(gormDB, models.PeranRelawan, models.PeranAdmin))
+	produkAdmin.Post("/", produkHandler.Create)
+	produkAdmin.Patch("/:id", produkHandler.Update)
+	produkAdmin.Delete("/:id", produkHandler.Delete)
+
 	log.Printf("COMITHRIFT API berjalan di port %s (%s)\n", cfg.Port, cfg.Env)
 	if err := app.Listen(":" + cfg.Port); err != nil {
 		log.Fatalf("Gagal menjalankan server: %v", err)
 	}
 }
-
