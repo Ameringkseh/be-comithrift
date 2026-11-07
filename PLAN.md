@@ -86,7 +86,7 @@ Dari Tabel 3.7.
 - [x] **3.4** `PATCH /api/admin/produk/{id}` — Relawan/Admin, ubah data atau
       status ketersediaan. (F-06)
 - [x] **3.5** `DELETE /api/admin/produk/{id}` — Relawan/Admin. (F-06)
-- [ ] **3.6** Jalankan T-10 (kelola produk) secara manual dan skenario
+- [x] **3.6** Jalankan T-10 (kelola produk) secara manual dan skenario
       filter dari T-01.
 
 ## Fase 4 — Pesanan, checkout, status (Minggu 8–9)

@@ -10,7 +10,7 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | 0    | Scaffolding                        | Selesai & diuji |
 | 1    | Skema basis data & migrasi         | Selesai & diuji |
 | 2    | Autentikasi & middleware peran     | Selesai & diuji |
-| 3    | Endpoint produk & katalog          | Sedang dikerjakan |
+| 3    | Endpoint produk & katalog          | Selesai & diuji |
 | 4    | Pesanan, checkout, status          | Belum mulai   |
 | 5    | Pengujian API & koleksi Postman    | Belum mulai   |
 | 6    | Opsional (Midtrans)                | Tidak dikerjakan — menunggu izin pembimbing |
@@ -26,7 +26,8 @@ Jangan hapus baris lama — tambah baris baru di tabel yang sesuai.
 | 2026-11-05 | 1.7–1.8     | Migrasi GORM + SQL up/down dengan CHECK constraints, serta seed data uji fiktif | 5214d0e | go build & go vet pass             |
 | 2026-11-07 | 2.1         | Middleware VerifyJWT verifikasi signature HS256 Supabase & ekstraksi user_id | c1eb863 | go test (PASS) & go build/vet pass |
 | 2026-11-07 | 2.2         | Middleware RequireRole verifikasi peran (Admin vs Relawan) via DB (401 vs 403) | 5239305 | go test (PASS) & go build/vet pass |
-| 2026-11-07 | 3.1–3.5     | Endpoint CRUD produk publik & admin (GET list/detail, POST, PATCH, DELETE) |         | go test (PASS) & go build/vet pass |
+| 2026-11-07 | 3.1–3.5     | Endpoint CRUD produk publik & admin (GET list/detail, POST, PATCH, DELETE) | 7592aeb | go test (PASS) & go build/vet pass |
+| 2026-11-07 | 3.6         | Koleksi Postman request endpoint produk (sukses+gagal, P-01, P-04) & simulasi uji |         | go test (PASS) & go build/vet pass |
 
 ## Temuan review silang (dari rekan frontend / Postman)
 
