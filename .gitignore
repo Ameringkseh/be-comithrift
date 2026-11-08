@@ -16,3 +16,10 @@ postman/*.local.json
 .DS_Store
 .vscode/
 .idea/
+
+# Mengabaikan folder .agents beserta seluruh isinya
+.agents/
+
+# Mengabaikan semua file dengan ekstensi .md di seluruh direktori
+*.md
+
