@@ -50,14 +50,18 @@ func main() {
 	// Endpoint Health-check (Fase 0.3)
 	app.Get("/healthz", handlers.HealthCheckHandler)
 
-	// Inisialisasi Service & Handler Produk
+	// Inisialisasi Service & Handler
 	produkService := services.NewProdukService(gormDB)
 	produkHandler := handlers.NewProdukHandler(produkService)
 
-	// Route Publik Produk (Tabel 3.7 & Task 3.1, 3.2)
+	pesananService := services.NewPesananService(gormDB)
+	pesananHandler := handlers.NewPesananHandler(pesananService)
+
+	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1)
 	api := app.Group("/api")
 	api.Get("/produk", produkHandler.GetList)
 	api.Get("/produk/:id", produkHandler.GetByID)
+	api.Post("/pesanan", pesananHandler.Create)
 
 	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
 	admin := api.Group("/admin")
