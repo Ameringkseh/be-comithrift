@@ -75,3 +75,23 @@ func (h *PesananHandler) Create(c *fiber.Ctx) error {
 	})
 }
 
+// GetList menangani endpoint admin GET /api/admin/pesanan dengan filter status (F-08)
+func (h *PesananHandler) GetList(c *fiber.Ctx) error {
+	filter := services.PesananFilter{
+		Status: c.Query("status"),
+	}
+
+	list, err := h.service.GetList(c.Context(), filter)
+	if err != nil {
+		return MapServiceError(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": list,
+		"meta": fiber.Map{
+			"total": len(list),
+		},
+	})
+}
+
+

@@ -29,8 +29,14 @@ type CreatePesananInput struct {
 	Items             []ItemPesananInput `json:"items"`
 }
 
+// PesananFilter parameter filter query untuk list pesanan admin
+type PesananFilter struct {
+	Status string `json:"status"`
+}
+
 type PesananService interface {
 	Create(ctx context.Context, input CreatePesananInput) (*models.Pesanan, error)
+	GetList(ctx context.Context, filter PesananFilter) ([]models.Pesanan, error)
 }
 
 type pesananService struct {
@@ -151,4 +157,40 @@ func (s *pesananService) Create(ctx context.Context, req CreatePesananInput) (*m
 
 	return &pesanan, nil
 }
+
+// GetList mengambil daftar pesanan untuk panel admin dengan opsi filter status (F-08)
+func (s *pesananService) GetList(ctx context.Context, filter PesananFilter) ([]models.Pesanan, error) {
+	if filter.Status != "" {
+		validStatuses := map[string]bool{
+			models.StatusPesananMenungguPembayaran: true,
+			models.StatusPesananDibayar:            true,
+			models.StatusPesananSelesai:            true,
+			models.StatusPesananDibatalkan:         true,
+		}
+		if !validStatuses[filter.Status] {
+			return nil, fmt.Errorf("%w: status pesanan '%s' tidak valid", ErrValidasi, filter.Status)
+		}
+	}
+
+	var list []models.Pesanan
+	query := s.db.WithContext(ctx).Model(&models.Pesanan{}).
+		Preload("ItemPesanan.Produk").
+		Preload("Pencatat").
+		Order("tanggal DESC, id_pesanan DESC")
+
+	if filter.Status != "" {
+		query = query.Where("status_pesanan = ?", filter.Status)
+	}
+
+	if err := query.Find(&list).Error; err != nil {
+		return nil, fmt.Errorf("gagal mengambil data pesanan: %w", err)
+	}
+
+	if list == nil {
+		list = []models.Pesanan{}
+	}
+
+	return list, nil
+}
+
 

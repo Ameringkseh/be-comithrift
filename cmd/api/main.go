@@ -70,9 +70,16 @@ func main() {
 	// Endpoint produk dapat diakses oleh Relawan dan Admin
 	produkAdmin := admin.Group("/produk")
 	produkAdmin.Use(middleware.RequireRole(gormDB, models.PeranRelawan, models.PeranAdmin))
+	produkAdmin.Post("", produkHandler.Create)
 	produkAdmin.Post("/", produkHandler.Create)
 	produkAdmin.Patch("/:id", produkHandler.Update)
 	produkAdmin.Delete("/:id", produkHandler.Delete)
+
+	// Endpoint pesanan admin hanya dapat diakses oleh Admin (Task 4.2, 4.3)
+	pesananAdmin := admin.Group("/pesanan")
+	pesananAdmin.Use(middleware.RequireRole(gormDB, models.PeranAdmin))
+	pesananAdmin.Get("", pesananHandler.GetList)
+	pesananAdmin.Get("/", pesananHandler.GetList)
 
 	log.Printf("COMITHRIFT API berjalan di port %s (%s)\n", cfg.Port, cfg.Env)
 	if err := app.Listen(":" + cfg.Port); err != nil {
