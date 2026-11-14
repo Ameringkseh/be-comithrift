@@ -56,6 +56,7 @@ func setupAdminPesananTestApp(t *testing.T) (*fiber.App, sqlmock.Sqlmock, string
 	pesananAdmin.Use(middleware.RequireRole(gormDB, models.PeranAdmin))
 	pesananAdmin.Get("", handler.GetList)
 	pesananAdmin.Get("/", handler.GetList)
+	pesananAdmin.Patch("/:id/status", handler.UpdateStatus)
 
 	return app, mock, secret
 }
@@ -333,4 +334,346 @@ func TestAdminGetPesananList_ForbiddenForRelawan(t *testing.T) {
 		t.Fatalf("expected 403 Forbidden for Relawan, got: %d", resp.StatusCode)
 	}
 }
+
+// Skenario P-06: Verifikasi pembayaran pesanan (menunggu_pembayaran -> dibayar)
+// Efek: pesanan menjadi dibayar, id_pencatat diisi id admin, produk menjadi 'terjual' (Status 200)
+func TestAdminUpdateStatusPesanan_Dibayar_Success_P06(t *testing.T) {
+	app, mock, secret := setupAdminPesananTestApp(t)
+	token := createPesananTestToken(secret, "admin-uuid-1")
+
+	// Middleware RequireRole
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE id_pengguna = \$1 ORDER BY "profil_pengguna"\."id_pengguna" LIMIT \$2`).
+		WithArgs("admin-uuid-1", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 1. Transaction BEGIN
+	mock.ExpectBegin()
+
+	// 2. SELECT FOR UPDATE pesanan
+	now := time.Now()
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2 FOR UPDATE`).
+		WithArgs(1, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan"}).
+			AddRow(1, "CMT-20261114-AA11", now, "Pembeli Satu", "0811111111", "Ambil di tempat", 85000, 10000, models.StatusPesananMenungguPembayaran))
+
+	// 3. Update status_pesanan & id_pencatat
+	mock.ExpectExec(`UPDATE "pesanan"`).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// 4. Pluck id_produk from item_pesanan
+	mock.ExpectQuery(`SELECT "id_produk" FROM "item_pesanan" WHERE id_pesanan = \$1`).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk"}).AddRow(100))
+
+	// 5. Update status produk menjadi 'terjual'
+	mock.ExpectExec(`UPDATE "produk"`).
+		WithArgs(models.StatusProdukTerjual, sqlmock.AnyArg(), 100).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// 6. Reload pesanan dengan preload
+	adminID := "admin-uuid-1"
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2`).
+		WithArgs(1, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan", "id_pencatat"}).
+			AddRow(1, "CMT-20261114-AA11", now, "Pembeli Satu", "0811111111", "Ambil di tempat", 85000, 10000, models.StatusPesananDibayar, adminID))
+
+	mock.ExpectQuery(`SELECT \* FROM "item_pesanan" WHERE "item_pesanan"\."id_pesanan" = \$1`).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_item_pesanan", "id_pesanan", "id_produk", "harga_saat_pesan"}).
+			AddRow(10, 1, 100, 85000))
+
+	mock.ExpectQuery(`SELECT \* FROM "produk" WHERE "produk"\."id_produk" = \$1`).
+		WithArgs(100).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk", "nama_produk", "harga", "status"}).
+			AddRow(100, "Jaket Kulit", 85000, models.StatusProdukTerjual))
+
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE "profil_pengguna"\."id_pengguna" = \$1`).
+		WithArgs("admin-uuid-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 7. Transaction COMMIT
+	mock.ExpectCommit()
+
+	payload := map[string]interface{}{
+		"status_pesanan": "dibayar",
+	}
+	body, _ := json.Marshal(payload)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/admin/pesanan/1/status", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 OK for P-06, got: %d", resp.StatusCode)
+	}
+
+	var res struct {
+		Data models.Pesanan `json:"data"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+
+	if res.Data.StatusPesanan != models.StatusPesananDibayar {
+		t.Errorf("expected status_pesanan dibayar, got: %s", res.Data.StatusPesanan)
+	}
+	if res.Data.IDPencatat == nil || *res.Data.IDPencatat != "admin-uuid-1" {
+		t.Errorf("expected id_pencatat admin-uuid-1, got: %v", res.Data.IDPencatat)
+	}
+}
+
+// Batalkan pesanan (menunggu_pembayaran -> dibatalkan): produk dilepas kembali menjadi 'tersedia'
+func TestAdminUpdateStatusPesanan_Dibatalkan_Success(t *testing.T) {
+	app, mock, secret := setupAdminPesananTestApp(t)
+	token := createPesananTestToken(secret, "admin-uuid-1")
+
+	// Middleware RequireRole
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE id_pengguna = \$1 ORDER BY "profil_pengguna"\."id_pengguna" LIMIT \$2`).
+		WithArgs("admin-uuid-1", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 1. Transaction BEGIN
+	mock.ExpectBegin()
+
+	// 2. SELECT FOR UPDATE pesanan
+	now := time.Now()
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2 FOR UPDATE`).
+		WithArgs(2, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan"}).
+			AddRow(2, "CMT-20261114-BB22", now, "Pembeli Dua", "0822222222", "Kirim kurir", 50000, 0, models.StatusPesananMenungguPembayaran))
+
+	// 3. Update status_pesanan & id_pencatat
+	mock.ExpectExec(`UPDATE "pesanan"`).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// 4. Pluck id_produk from item_pesanan
+	mock.ExpectQuery(`SELECT "id_produk" FROM "item_pesanan" WHERE id_pesanan = \$1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk"}).AddRow(200))
+
+	// 5. Update status produk menjadi 'tersedia' (dilepas)
+	mock.ExpectExec(`UPDATE "produk"`).
+		WithArgs(models.StatusProdukTersedia, sqlmock.AnyArg(), 200).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// 6. Reload pesanan dengan preload
+	adminID := "admin-uuid-1"
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2`).
+		WithArgs(2, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan", "id_pencatat"}).
+			AddRow(2, "CMT-20261114-BB22", now, "Pembeli Dua", "0822222222", "Kirim kurir", 50000, 0, models.StatusPesananDibatalkan, adminID))
+
+	mock.ExpectQuery(`SELECT \* FROM "item_pesanan" WHERE "item_pesanan"\."id_pesanan" = \$1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id_item_pesanan", "id_pesanan", "id_produk", "harga_saat_pesan"}).
+			AddRow(20, 2, 200, 50000))
+
+	mock.ExpectQuery(`SELECT \* FROM "produk" WHERE "produk"\."id_produk" = \$1`).
+		WithArgs(200).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk", "nama_produk", "harga", "status"}).
+			AddRow(200, "Kaus Polos", 50000, models.StatusProdukTersedia))
+
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE "profil_pengguna"\."id_pengguna" = \$1`).
+		WithArgs("admin-uuid-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 7. Transaction COMMIT
+	mock.ExpectCommit()
+
+	payload := map[string]interface{}{
+		"status_pesanan": "dibatalkan",
+	}
+	body, _ := json.Marshal(payload)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/admin/pesanan/2/status", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 OK, got: %d", resp.StatusCode)
+	}
+
+	var res struct {
+		Data models.Pesanan `json:"data"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+
+	if res.Data.StatusPesanan != models.StatusPesananDibatalkan {
+		t.Errorf("expected status_pesanan dibatalkan, got: %s", res.Data.StatusPesanan)
+	}
+}
+
+// Transisi dari status akhir (selesai -> dibayar) harus ditolak 400 TRANSISI_TIDAK_VALID
+func TestAdminUpdateStatusPesanan_InvalidTransition_Rejected(t *testing.T) {
+	app, mock, secret := setupAdminPesananTestApp(t)
+	token := createPesananTestToken(secret, "admin-uuid-1")
+
+	// Middleware RequireRole
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE id_pengguna = \$1 ORDER BY "profil_pengguna"\."id_pengguna" LIMIT \$2`).
+		WithArgs("admin-uuid-1", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 1. Transaction BEGIN
+	mock.ExpectBegin()
+
+	// 2. Pesanan sudah selesai
+	now := time.Now()
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2 FOR UPDATE`).
+		WithArgs(3, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "status_pesanan"}).
+			AddRow(3, "CMT-20261114-CC33", now, "Pembeli Tiga", models.StatusPesananSelesai))
+
+	// 3. Rollback otomatis karena transisi tidak diizinkan
+	mock.ExpectRollback()
+
+	payload := map[string]interface{}{
+		"status_pesanan": "dibayar",
+	}
+	body, _ := json.Marshal(payload)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/admin/pesanan/3/status", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request for invalid transition, got: %d", resp.StatusCode)
+	}
+
+	var errResp struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	json.NewDecoder(resp.Body).Decode(&errResp)
+	if errResp.Error.Code != "TRANSISI_TIDAK_VALID" {
+		t.Errorf("expected error code TRANSISI_TIDAK_VALID, got: %s", errResp.Error.Code)
+	}
+}
+
+// Status enum tidak dikenal menghasilkan 400 VALIDASI_GAGAL
+func TestAdminUpdateStatusPesanan_InvalidStatusEnum(t *testing.T) {
+	app, mock, secret := setupAdminPesananTestApp(t)
+	token := createPesananTestToken(secret, "admin-uuid-1")
+
+	// Middleware RequireRole
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE id_pengguna = \$1 ORDER BY "profil_pengguna"\."id_pengguna" LIMIT \$2`).
+		WithArgs("admin-uuid-1", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	payload := map[string]interface{}{
+		"status_pesanan": "status_asal_asalan",
+	}
+	body, _ := json.Marshal(payload)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/admin/pesanan/1/status", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request, got: %d", resp.StatusCode)
+	}
+
+	var errResp struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	json.NewDecoder(resp.Body).Decode(&errResp)
+	if errResp.Error.Code != "VALIDASI_GAGAL" {
+		t.Errorf("expected error code VALIDASI_GAGAL, got: %s", errResp.Error.Code)
+	}
+}
+
+// Transisi status: dibayar -> selesai (produk tetap terjual, status_pesanan selesai)
+func TestAdminUpdateStatusPesanan_Selesai_Success(t *testing.T) {
+	app, mock, secret := setupAdminPesananTestApp(t)
+	token := createPesananTestToken(secret, "admin-uuid-1")
+
+	// Middleware RequireRole
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE id_pengguna = \$1 ORDER BY "profil_pengguna"\."id_pengguna" LIMIT \$2`).
+		WithArgs("admin-uuid-1", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 1. Transaction BEGIN
+	mock.ExpectBegin()
+
+	// 2. SELECT FOR UPDATE pesanan (status: dibayar)
+	now := time.Now()
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2 FOR UPDATE`).
+		WithArgs(4, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan"}).
+			AddRow(4, "CMT-20261114-DD44", now, "Pembeli Empat", "0844444444", "Ambil di tempat", 90000, 10000, models.StatusPesananDibayar))
+
+	// 3. Update status_pesanan & id_pencatat
+	mock.ExpectExec(`UPDATE "pesanan"`).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// 4. Pluck id_produk from item_pesanan
+	mock.ExpectQuery(`SELECT "id_produk" FROM "item_pesanan" WHERE id_pesanan = \$1`).
+		WithArgs(4).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk"}).AddRow(400))
+
+	// Untuk status 'selesai', produk tetap 'terjual' (tidak ada update ke tabel produk)
+
+	// 5. Reload pesanan dengan preload
+	adminID := "admin-uuid-1"
+	mock.ExpectQuery(`SELECT \* FROM "pesanan" WHERE id_pesanan = \$1 ORDER BY "pesanan"\."id_pesanan" LIMIT \$2`).
+		WithArgs(4, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id_pesanan", "kode_pesanan", "tanggal", "nama_pembeli", "kontak_whatsapp", "metode_serah_terima", "total_belanja", "nominal_donasi", "status_pesanan", "id_pencatat"}).
+			AddRow(4, "CMT-20261114-DD44", now, "Pembeli Empat", "0844444444", "Ambil di tempat", 90000, 10000, models.StatusPesananSelesai, adminID))
+
+	mock.ExpectQuery(`SELECT \* FROM "item_pesanan" WHERE "item_pesanan"\."id_pesanan" = \$1`).
+		WithArgs(4).
+		WillReturnRows(sqlmock.NewRows([]string{"id_item_pesanan", "id_pesanan", "id_produk", "harga_saat_pesan"}).
+			AddRow(40, 4, 400, 90000))
+
+	mock.ExpectQuery(`SELECT \* FROM "produk" WHERE "produk"\."id_produk" = \$1`).
+		WithArgs(400).
+		WillReturnRows(sqlmock.NewRows([]string{"id_produk", "nama_produk", "harga", "status"}).
+			AddRow(400, "Celana Chino", 90000, models.StatusProdukTerjual))
+
+	mock.ExpectQuery(`SELECT \* FROM "profil_pengguna" WHERE "profil_pengguna"\."id_pengguna" = \$1`).
+		WithArgs("admin-uuid-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id_pengguna", "nama", "peran"}).
+			AddRow("admin-uuid-1", "Admin Utama", models.PeranAdmin))
+
+	// 6. Transaction COMMIT
+	mock.ExpectCommit()
+
+	payload := map[string]interface{}{
+		"status_pesanan": "selesai",
+	}
+	body, _ := json.Marshal(payload)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/admin/pesanan/4/status", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 OK for selesai, got: %d", resp.StatusCode)
+	}
+
+	var res struct {
+		Data models.Pesanan `json:"data"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+
+	if res.Data.StatusPesanan != models.StatusPesananSelesai {
+		t.Errorf("expected status_pesanan selesai, got: %s", res.Data.StatusPesanan)
+	}
+}
+
+
 

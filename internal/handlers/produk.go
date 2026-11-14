@@ -58,6 +58,8 @@ func MapServiceError(c *fiber.Ctx, err error) error {
 		return middleware.RespondError(c, fiber.StatusBadRequest, "PRODUK_TIDAK_TERSEDIA", "Produk sedang tidak tersedia.")
 	case errors.Is(err, services.ErrProdukSedangDipesan):
 		return middleware.RespondError(c, fiber.StatusBadRequest, "PRODUK_SEDANG_DIPESAN", "Produk sedang berada dalam pesanan aktif dan tidak dapat dihapus.")
+	case errors.Is(err, services.ErrTransisiTidakValid):
+		return middleware.RespondError(c, fiber.StatusBadRequest, "TRANSISI_TIDAK_VALID", err.Error())
 	case errors.Is(err, services.ErrValidasi):
 		return middleware.RespondError(c, fiber.StatusBadRequest, "VALIDASI_GAGAL", err.Error())
 	default:

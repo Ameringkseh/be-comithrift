@@ -80,6 +80,7 @@ func main() {
 	pesananAdmin.Use(middleware.RequireRole(gormDB, models.PeranAdmin))
 	pesananAdmin.Get("", pesananHandler.GetList)
 	pesananAdmin.Get("/", pesananHandler.GetList)
+	pesananAdmin.Patch("/:id/status", pesananHandler.UpdateStatus)
 
 	log.Printf("COMITHRIFT API berjalan di port %s (%s)\n", cfg.Port, cfg.Env)
 	if err := app.Listen(":" + cfg.Port); err != nil {

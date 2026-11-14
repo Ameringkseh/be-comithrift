@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"be-comithrift/internal/middleware"
 	"be-comithrift/internal/services"
@@ -93,5 +95,50 @@ func (h *PesananHandler) GetList(c *fiber.Ctx) error {
 		},
 	})
 }
+
+// UpdateStatusPesananRequest body request untuk PATCH /api/admin/pesanan/:id/status
+type UpdateStatusPesananRequest struct {
+	StatusPesanan string `json:"status_pesanan"`
+	Status        string `json:"status"` // alias opsional
+}
+
+// UpdateStatus menangani endpoint admin PATCH /api/admin/pesanan/:id/status (F-08, P-06)
+// Mengikuti aturan state machine & transaksi atomik dari .agents/skills/order-status-lifecycle/SKILL.md
+func (h *PesananHandler) UpdateStatus(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		return middleware.RespondError(c, fiber.StatusBadRequest, "ID_TIDAK_VALID", "Parameter ID pesanan harus berupa angka.")
+	}
+
+	var req UpdateStatusPesananRequest
+	if err := c.BodyParser(&req); err != nil {
+		return middleware.RespondError(c, fiber.StatusBadRequest, "BODY_TIDAK_VALID", "Format request JSON tidak dapat dibaca.")
+	}
+
+	statusBaru := strings.TrimSpace(req.StatusPesanan)
+	if statusBaru == "" {
+		statusBaru = strings.TrimSpace(req.Status)
+	}
+	if statusBaru == "" {
+		return middleware.RespondError(c, fiber.StatusBadRequest, "VALIDASI_GAGAL", "Field status_pesanan wajib diisi.")
+	}
+
+	// id_pencatat diambil dari token Admin yang login (c.Locals("user_id")), BUKAN dari request body
+	idAdmin, _ := c.Locals("user_id").(string)
+	if idAdmin == "" {
+		return middleware.RespondError(c, fiber.StatusUnauthorized, "TOKEN_TIDAK_VALID", "Identitas admin tidak ditemukan.")
+	}
+
+	pesanan, err := h.service.UpdateStatus(c.Context(), uint(id), statusBaru, idAdmin)
+	if err != nil {
+		return MapServiceError(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": pesanan,
+	})
+}
+
 
 

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -37,6 +38,7 @@ type PesananFilter struct {
 type PesananService interface {
 	Create(ctx context.Context, input CreatePesananInput) (*models.Pesanan, error)
 	GetList(ctx context.Context, filter PesananFilter) ([]models.Pesanan, error)
+	UpdateStatus(ctx context.Context, idPesanan uint, statusBaru string, idAdmin string) (*models.Pesanan, error)
 }
 
 type pesananService struct {
@@ -192,5 +194,114 @@ func (s *pesananService) GetList(ctx context.Context, filter PesananFilter) ([]m
 
 	return list, nil
 }
+
+// TransisiStatusDiizinkan mendefinisikan state machine transisi status pesanan
+// Sumber: .agents/skills/order-status-lifecycle/SKILL.md
+var TransisiStatusDiizinkan = map[string][]string{
+	models.StatusPesananMenungguPembayaran: {models.StatusPesananDibayar, models.StatusPesananDibatalkan},
+	models.StatusPesananDibayar:            {models.StatusPesananSelesai, models.StatusPesananDibatalkan},
+}
+
+// UpdateStatus mengubah status pesanan secara atomik dan memperbarui status produk terkait
+// Sesuai state machine di .agents/skills/order-status-lifecycle/SKILL.md (F-08, P-06)
+func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statusBaru string, idAdmin string) (*models.Pesanan, error) {
+	validStatuses := map[string]bool{
+		models.StatusPesananMenungguPembayaran: true,
+		models.StatusPesananDibayar:            true,
+		models.StatusPesananSelesai:            true,
+		models.StatusPesananDibatalkan:         true,
+	}
+	if !validStatuses[statusBaru] {
+		return nil, fmt.Errorf("%w: status pesanan '%s' tidak valid", ErrValidasi, statusBaru)
+	}
+
+	var pesanan models.Pesanan
+
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. SELECT ... FOR UPDATE pesanan
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(&pesanan, "id_pesanan = ?", idPesanan).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("%w: pesanan dengan ID %d tidak ditemukan", ErrNotFound, idPesanan)
+			}
+			return fmt.Errorf("gagal mengunci data pesanan: %w", err)
+		}
+
+		// 2. Validasi transisi status sesuai state machine order-status-lifecycle
+		diizinkan, exists := TransisiStatusDiizinkan[pesanan.StatusPesanan]
+		if !exists {
+			return fmt.Errorf("%w: pesanan dengan status '%s' sudah mencapai status akhir dan tidak dapat diubah",
+				ErrTransisiTidakValid, pesanan.StatusPesanan)
+		}
+
+		isAllowed := false
+		for _, st := range diizinkan {
+			if st == statusBaru {
+				isAllowed = true
+				break
+			}
+		}
+		if !isAllowed {
+			return fmt.Errorf("%w: tidak bisa mengubah status pesanan dari '%s' ke '%s'",
+				ErrTransisiTidakValid, pesanan.StatusPesanan, statusBaru)
+		}
+
+		// 3. Update status_pesanan dan id_pencatat (admin yang memverifikasi)
+		updates := map[string]interface{}{
+			"status_pesanan": statusBaru,
+			"id_pencatat":    idAdmin,
+		}
+		if err := tx.Model(&pesanan).Updates(updates).Error; err != nil {
+			return fmt.Errorf("gagal memperbarui status pesanan: %w", err)
+		}
+
+		// 4. Efek ke status produk dalam transaksi yang sama
+		var productIDs []uint
+		if err := tx.Model(&models.ItemPesanan{}).
+			Where("id_pesanan = ?", idPesanan).
+			Pluck("id_produk", &productIDs).Error; err != nil {
+			return fmt.Errorf("gagal mengambil item pesanan: %w", err)
+		}
+
+		if len(productIDs) > 0 {
+			switch statusBaru {
+			case models.StatusPesananDibayar:
+				// Pesanan dibayar menjadikan produk berstatus 'terjual'
+				if err := tx.Model(&models.Produk{}).
+					Where("id_produk IN (?)", productIDs).
+					Update("status", models.StatusProdukTerjual).Error; err != nil {
+					return fmt.Errorf("gagal memperbarui status produk menjadi terjual: %w", err)
+				}
+			case models.StatusPesananDibatalkan:
+				// Pesanan dibatalkan melepas produk kembali 'tersedia'
+				if err := tx.Model(&models.Produk{}).
+					Where("id_produk IN (?)", productIDs).
+					Update("status", models.StatusProdukTersedia).Error; err != nil {
+					return fmt.Errorf("gagal mengembalikan status produk menjadi tersedia: %w", err)
+				}
+			case models.StatusPesananSelesai:
+				// Pesanan selesai: status produk tetap 'terjual', tidak ada perubahan
+			}
+		}
+
+		// 5. Muat ulang pesanan lengkap dengan preloads
+		var result models.Pesanan
+		if err := tx.Preload("ItemPesanan.Produk").
+			Preload("Pencatat").
+			First(&result, "id_pesanan = ?", idPesanan).Error; err != nil {
+			return fmt.Errorf("gagal memuat data pesanan yang diperbarui: %w", err)
+		}
+		pesanan = result
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pesanan, nil
+}
+
 
 
