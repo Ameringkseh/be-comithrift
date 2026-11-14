@@ -57,11 +57,15 @@ func main() {
 	pesananService := services.NewPesananService(gormDB)
 	pesananHandler := handlers.NewPesananHandler(pesananService)
 
-	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1)
+	donasiService := services.NewDonasiService(gormDB)
+	donasiHandler := handlers.NewDonasiHandler(donasiService)
+
+	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1, 4.4)
 	api := app.Group("/api")
 	api.Get("/produk", produkHandler.GetList)
 	api.Get("/produk/:id", produkHandler.GetByID)
 	api.Post("/pesanan", pesananHandler.Create)
+	api.Get("/donasi/ringkasan", donasiHandler.GetRingkasan)
 
 	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
 	admin := api.Group("/admin")
