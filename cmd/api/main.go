@@ -60,6 +60,9 @@ func main() {
 	donasiService := services.NewDonasiService(gormDB)
 	donasiHandler := handlers.NewDonasiHandler(donasiService)
 
+	rekapService := services.NewRekapService(gormDB)
+	rekapHandler := handlers.NewRekapHandler(rekapService)
+
 	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1, 4.4)
 	api := app.Group("/api")
 	api.Get("/produk", produkHandler.GetList)
@@ -90,6 +93,10 @@ func main() {
 	donasiAdmin := admin.Group("/donasi")
 	donasiAdmin.Use(middleware.RequireRole(gormDB, models.PeranAdmin))
 	donasiAdmin.Post("/penyaluran", donasiHandler.CatatPenyaluran)
+
+	// Endpoint rekap admin hanya dapat diakses oleh Admin (Task 4.6, F-11, T-14)
+	admin.Get("/rekap", middleware.RequireRole(gormDB, models.PeranAdmin), rekapHandler.GetRekap)
+	admin.Get("/rekap/", middleware.RequireRole(gormDB, models.PeranAdmin), rekapHandler.GetRekap)
 
 	log.Printf("COMITHRIFT API berjalan di port %s (%s)\n", cfg.Port, cfg.Env)
 	if err := app.Listen(":" + cfg.Port); err != nil {
