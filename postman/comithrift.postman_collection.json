@@ -307,7 +307,482 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Pesanan (Publik)",
+      "item": [
+        {
+          "name": "P-02 - Membuat pesanan dengan data valid (expect 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pembeli\": \"Budi Santoso\",\n  \"kontak_whatsapp\": \"081234567890\",\n  \"metode_serah_terima\": \"Ambil di tempat\",\n  \"nominal_donasi\": 15000,\n  \"catatan\": \"Ambil hari sabtu sore\",\n  \"items\": [\n    {\n      \"id_produk\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pesanan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pesanan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created (P-02)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Data pesanan berhasil dibuat dengan kode unik', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id_pesanan');",
+                  "    pm.expect(jsonData.data).to.have.property('kode_pesanan');",
+                  "    pm.expect(jsonData.data.status_pesanan).to.eql('menunggu_pembayaran');",
+                  "    pm.expect(jsonData.data.total_belanja).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P-03 - Checkout produk yang tidak tersedia / sudah dipesan (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pembeli\": \"Andi Permana\",\n  \"kontak_whatsapp\": \"089876543210\",\n  \"metode_serah_terima\": \"Kirim kurir\",\n  \"nominal_donasi\": 0,\n  \"items\": [\n    {\n      \"id_produk\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pesanan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pesanan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request (P-03)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error code is PRODUK_TIDAK_TERSEDIA', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.eql('PRODUK_TIDAK_TERSEDIA');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Checkout dengan keranjang kosong (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pembeli\": \"Budi\",\n  \"kontak_whatsapp\": \"081234567890\",\n  \"metode_serah_terima\": \"Ambil di tempat\",\n  \"items\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pesanan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pesanan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error code is VALIDASI_GAGAL', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.eql('VALIDASI_GAGAL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin - Pesanan",
+      "item": [
+        {
+          "name": "T-11 - Mengambil daftar seluruh pesanan oleh Admin (expect 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/pesanan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pesanan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK (T-11)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Format response memuat data array dan meta', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData).to.have.property('meta');",
+                  "    pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T-11 - Mengambil daftar pesanan dengan filter status (expect 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/pesanan?status=dibayar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pesanan"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "dibayar"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Seluruh item berstatus dibayar', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.data.forEach(function(item) {",
+                  "        pm.expect(item.status_pesanan).to.eql('dibayar');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P-05 - Mengakses endpoint pesanan admin dengan token Relawan (expect 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_relawan}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/pesanan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pesanan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden (P-05)', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('Error code is AKSES_DITOLAK', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.eql('AKSES_DITOLAK');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P-06 - Admin verifikasi pembayaran pesanan (expect 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_pesanan\": \"dibayar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/pesanan/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pesanan", "1", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK (P-06 / T-12)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Status pesanan berhasil berubah menjadi dibayar', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status_pesanan).to.eql('dibayar');",
+                  "    pm.expect(jsonData.data).to.have.property('id_pencatat');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin update status dengan transisi tidak valid (expect 400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_pesanan\": \"menunggu_pembayaran\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/pesanan/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pesanan", "1", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error code is TRANSISI_TIDAK_VALID', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.eql('TRANSISI_TIDAK_VALID');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Donasi (Publik)",
+      "item": [
+        {
+          "name": "T-13 - Mengambil ringkasan donasi publik & Tebar Cinta (expect 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/donasi/ringkasan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "donasi", "ringkasan"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK (T-13)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Format ringkasan donasi lengkap', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total_terkumpul');",
+                  "    pm.expect(jsonData.data).to.have.property('total_tersalurkan');",
+                  "    pm.expect(jsonData.data).to.have.property('saldo_donasi');",
+                  "    pm.expect(jsonData.data).to.have.property('riwayat_penyaluran');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin - Donasi & Rekap",
+      "item": [
+        {
+          "name": "Catat penyaluran donasi oleh Admin (expect 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nominal\": 50000,\n  \"keterangan\": \"Penyaluran sembako & santunan panti asuhan\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/donasi/penyaluran",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "donasi", "penyaluran"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Penyaluran berhasil dicatat', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id_penyaluran');",
+                  "    pm.expect(jsonData.data.nominal).to.eql(50000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P-07 - Mencatat penyaluran donasi melebihi saldo tersedia (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nominal\": 999999999,\n  \"keterangan\": \"Penyaluran fiktif melebihi saldo tersedia\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/donasi/penyaluran",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "donasi", "penyaluran"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request (P-07)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error code is NOMINAL_MELEBIHI_SALDO', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.eql('NOMINAL_MELEBIHI_SALDO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T-14 - Mengambil rekapitulasi data Admin (expect 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/rekap",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "rekap"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK (T-14)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Data rekapitulasi lengkap', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('pesanan');",
+                  "    pm.expect(jsonData.data).to.have.property('total_penjualan');",
+                  "    pm.expect(jsonData.data).to.have.property('donasi');",
+                  "    pm.expect(jsonData.data).to.have.property('produk');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
-
