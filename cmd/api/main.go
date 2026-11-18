@@ -86,6 +86,11 @@ func main() {
 	pesananAdmin.Get("/", pesananHandler.GetList)
 	pesananAdmin.Patch("/:id/status", pesananHandler.UpdateStatus)
 
+	// Endpoint donasi admin hanya dapat diakses oleh Admin (Task 4.5)
+	donasiAdmin := admin.Group("/donasi")
+	donasiAdmin.Use(middleware.RequireRole(gormDB, models.PeranAdmin))
+	donasiAdmin.Post("/penyaluran", donasiHandler.CatatPenyaluran)
+
 	log.Printf("COMITHRIFT API berjalan di port %s (%s)\n", cfg.Port, cfg.Env)
 	if err := app.Listen(":" + cfg.Port); err != nil {
 		log.Fatalf("Gagal menjalankan server: %v", err)

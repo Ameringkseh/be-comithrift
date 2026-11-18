@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"be-comithrift/internal/models"
 
@@ -19,8 +21,17 @@ type RingkasanDonasi struct {
 	InfoProgram       *models.InfoProgram      `json:"info_program,omitempty"`
 }
 
+// CreatePenyaluranInput data masukan untuk mencatat penyaluran donasi (F-09, P-07)
+type CreatePenyaluranInput struct {
+	Nominal    int64     `json:"nominal"`
+	Keterangan string    `json:"keterangan"`
+	Tanggal    time.Time `json:"tanggal"`
+	IDPencatat string    `json:"id_pencatat"`
+}
+
 type DonasiService interface {
 	GetRingkasan(ctx context.Context) (*RingkasanDonasi, error)
+	CatatPenyaluran(ctx context.Context, input CreatePenyaluranInput) (*models.PenyaluranDonasi, error)
 }
 
 type donasiService struct {
@@ -92,3 +103,76 @@ func (s *donasiService) GetRingkasan(ctx context.Context) (*RingkasanDonasi, err
 		InfoProgram:       infoPtr,
 	}, nil
 }
+
+// CatatPenyaluran mencatat penyaluran donasi oleh admin (F-09, P-07)
+// Wajib memvalidasi nominal tidak melebihi saldo donasi yang belum tersalurkan (aturan #6 20-data-model.md)
+func (s *donasiService) CatatPenyaluran(ctx context.Context, input CreatePenyaluranInput) (*models.PenyaluranDonasi, error) {
+	if input.Nominal <= 0 {
+		return nil, fmt.Errorf("%w: nominal penyaluran harus lebih dari 0", ErrValidasi)
+	}
+	if strings.TrimSpace(input.Keterangan) == "" {
+		return nil, fmt.Errorf("%w: keterangan penyaluran tidak boleh kosong", ErrValidasi)
+	}
+	if strings.TrimSpace(input.IDPencatat) == "" {
+		return nil, fmt.Errorf("%w: identitas pencatat wajib ada", ErrValidasi)
+	}
+	if input.Tanggal.IsZero() {
+		input.Tanggal = time.Now()
+	}
+
+	var penyaluran models.PenyaluranDonasi
+
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. Hitung total donasi terkumpul dari pesanan dibayar/selesai
+		var totalTerkumpul int64
+		if err := tx.Model(&models.Pesanan{}).
+			Where("status_pesanan IN (?)", []string{models.StatusPesananDibayar, models.StatusPesananSelesai}).
+			Select("COALESCE(SUM(nominal_donasi), 0)").
+			Scan(&totalTerkumpul).Error; err != nil {
+			return fmt.Errorf("gagal menghitung total donasi terkumpul: %w", err)
+		}
+
+		// 2. Hitung total donasi yang sudah tersalurkan
+		var totalTersalurkan int64
+		if err := tx.Model(&models.PenyaluranDonasi{}).
+			Select("COALESCE(SUM(nominal), 0)").
+			Scan(&totalTersalurkan).Error; err != nil {
+			return fmt.Errorf("gagal menghitung total donasi tersalurkan: %w", err)
+		}
+
+		// 3. Validasi aturan #6: Nominal tidak boleh melebihi saldo belum tersalurkan
+		saldoTersedia := totalTerkumpul - totalTersalurkan
+		if input.Nominal > saldoTersedia {
+			return fmt.Errorf("%w: nominal penyaluran (%d) melebihi saldo donasi tersedia (%d)",
+				ErrNominalMelebihiSaldo, input.Nominal, saldoTersedia)
+		}
+
+		// 4. Simpan catatan penyaluran donasi
+		penyaluran = models.PenyaluranDonasi{
+			Tanggal:    input.Tanggal,
+			Nominal:    input.Nominal,
+			Keterangan: strings.TrimSpace(input.Keterangan),
+			IDPencatat: input.IDPencatat,
+		}
+
+		if err := tx.Create(&penyaluran).Error; err != nil {
+			return fmt.Errorf("gagal menyimpan data penyaluran donasi: %w", err)
+		}
+
+		// 5. Preload data pencatat
+		var result models.PenyaluranDonasi
+		if err := tx.Preload("Pencatat").First(&result, "id_penyaluran = ?", penyaluran.IDPenyaluran).Error; err != nil {
+			return fmt.Errorf("gagal memuat data pencatat: %w", err)
+		}
+		penyaluran = result
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &penyaluran, nil
+}
+
