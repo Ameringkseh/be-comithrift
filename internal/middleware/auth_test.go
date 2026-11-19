@@ -1,6 +1,9 @@
 package middleware_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -90,6 +93,38 @@ func TestVerifyJWT(t *testing.T) {
 	respB64, err := appB64.Test(reqB64)
 	if err != nil || respB64.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200 with base64 Supabase secret, got: %d", respB64.StatusCode)
+	}
+
+	// 5. Token valid ditandatangani dengan ES256 (asimetris ECDSA P-256 Supabase JWKS) -> 200
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate EC key: %v", err)
+	}
+	testKid := "test-kid-supabase-123"
+	middleware.SetJWKSCacheForTest(testKid, &privKey.PublicKey)
+
+	appES256 := fiber.New()
+	appES256.Get("/test-es256", middleware.VerifyJWT("any-dummy-secret"), func(c *fiber.Ctx) error {
+		userID := c.Locals("user_id").(string)
+		return c.JSON(fiber.Map{"user_id": userID})
+	})
+
+	tokenES256 := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"sub": "user-es256-uuid-999",
+		"iss": "https://test.supabase.co/auth/v1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	tokenES256.Header["kid"] = testKid
+	signedES256, err := tokenES256.SignedString(privKey)
+	if err != nil {
+		t.Fatalf("failed to sign token with ES256: %v", err)
+	}
+
+	reqES256 := httptest.NewRequest(http.MethodGet, "/test-es256", nil)
+	reqES256.Header.Set("Authorization", "Bearer "+signedES256)
+	respES256, err := appES256.Test(reqES256)
+	if err != nil || respES256.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 with ES256 token, got: %d", respES256.StatusCode)
 	}
 }
 

@@ -29,8 +29,14 @@
             },
             "url": {
               "raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
-              "host": ["{{supabase_url}}"],
-              "path": ["auth", "v1", "token"],
+              "host": [
+                "{{supabase_url}}"
+              ],
+              "path": [
+                "auth",
+                "v1",
+                "token"
+              ],
               "query": [
                 {
                   "key": "grant_type",
@@ -77,8 +83,14 @@
             },
             "url": {
               "raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
-              "host": ["{{supabase_url}}"],
-              "path": ["auth", "v1", "token"],
+              "host": [
+                "{{supabase_url}}"
+              ],
+              "path": [
+                "auth",
+                "v1",
+                "token"
+              ],
               "query": [
                 {
                   "key": "grant_type",
@@ -117,8 +129,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/produk?kategori=Jaket&ukuran=L",
-              "host": ["{{base_url}}"],
-              "path": ["api", "produk"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk"
+              ],
               "query": [
                 {
                   "key": "kategori",
@@ -157,8 +174,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/produk/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "produk", "1"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk",
+                "1"
+              ]
             }
           },
           "event": [
@@ -187,8 +210,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/produk/99999",
-              "host": ["{{base_url}}"],
-              "path": ["api", "produk", "99999"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk",
+                "99999"
+              ]
             }
           },
           "event": [
@@ -233,8 +262,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/produk",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "produk"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "produk"
+              ]
             }
           },
           "event": [
@@ -271,8 +306,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/produk",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "produk"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "produk"
+              ]
             }
           },
           "event": [
@@ -312,8 +353,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/produk",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "produk"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "produk"
+              ]
             }
           },
           "event": [
@@ -353,8 +400,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/produk/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "produk", "1"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "produk",
+                "1"
+              ]
             }
           },
           "event": [
@@ -386,8 +440,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/admin/produk/4",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "produk", "4"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "produk",
+                "4"
+              ]
             }
           },
           "event": [
@@ -428,8 +489,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/pesanan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "pesanan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pesanan"
+              ]
             }
           },
           "event": [
@@ -468,8 +534,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/pesanan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "pesanan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pesanan"
+              ]
             }
           },
           "event": [
@@ -505,8 +576,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/pesanan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "pesanan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pesanan"
+              ]
             }
           },
           "event": [
@@ -543,8 +619,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/admin/pesanan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "pesanan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pesanan"
+              ]
             }
           },
           "event": [
@@ -578,8 +660,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/admin/pesanan?status=dibayar",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "pesanan"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pesanan"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -619,8 +707,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/admin/pesanan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "pesanan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pesanan"
+              ]
             }
           },
           "event": [
@@ -660,8 +754,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/pesanan/1/status",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "pesanan", "1", "status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pesanan",
+                "1",
+                "status"
+              ]
             }
           },
           "event": [
@@ -702,8 +804,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/pesanan/1/status",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "pesanan", "1", "status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pesanan",
+                "1",
+                "status"
+              ]
             }
           },
           "event": [
@@ -735,8 +845,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/donasi/ringkasan",
-              "host": ["{{base_url}}"],
-              "path": ["api", "donasi", "ringkasan"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "donasi",
+                "ringkasan"
+              ]
             }
           },
           "event": [
@@ -780,12 +896,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nominal\": 50000,\n  \"keterangan\": \"Penyaluran sembako & santunan panti asuhan\"\n}"
+              "raw": "{\n  \"nominal\": 10000,\n  \"keterangan\": \"Penyaluran sembako & santunan panti asuhan\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/admin/donasi/penyaluran",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "donasi", "penyaluran"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donasi",
+                "penyaluran"
+              ]
             }
           },
           "event": [
@@ -799,7 +922,7 @@
                   "pm.test('Penyaluran berhasil dicatat', function () {",
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data).to.have.property('id_penyaluran');",
-                  "    pm.expect(jsonData.data.nominal).to.eql(50000);",
+                  "    pm.expect(jsonData.data.nominal).to.eql(10000);",
                   "});"
                 ]
               }
@@ -826,8 +949,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/donasi/penyaluran",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "donasi", "penyaluran"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donasi",
+                "penyaluran"
+              ]
             }
           },
           "event": [
@@ -859,8 +989,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/admin/rekap",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "rekap"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "rekap"
+              ]
             }
           },
           "event": [

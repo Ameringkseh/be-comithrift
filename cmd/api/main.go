@@ -72,7 +72,7 @@ func main() {
 
 	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
 	admin := api.Group("/admin")
-	admin.Use(middleware.VerifyJWT(cfg.SupabaseJWTSecret))
+	admin.Use(middleware.VerifyJWT(cfg.SupabaseJWTSecret, cfg.SupabaseProjectURL))
 
 	// Endpoint produk dapat diakses oleh Relawan dan Admin
 	produkAdmin := admin.Group("/produk")
