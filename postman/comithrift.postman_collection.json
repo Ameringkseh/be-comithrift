@@ -512,6 +512,7 @@
                   "    pm.expect(jsonData.data).to.have.property('kode_pesanan');",
                   "    pm.expect(jsonData.data.status_pesanan).to.eql('menunggu_pembayaran');",
                   "    pm.expect(jsonData.data.total_belanja).to.be.above(0);",
+                  "    pm.environment.set('pesanan_id', jsonData.data.id_pesanan);",
                   "});"
                 ]
               }
@@ -530,7 +531,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nama_pembeli\": \"Andi Permana\",\n  \"kontak_whatsapp\": \"089876543210\",\n  \"metode_serah_terima\": \"Kirim kurir\",\n  \"nominal_donasi\": 0,\n  \"items\": [\n    {\n      \"id_produk\": 2\n    }\n  ]\n}"
+              "raw": "{\n  \"nama_pembeli\": \"Andi Permana\",\n  \"kontak_whatsapp\": \"089876543210\",\n  \"metode_serah_terima\": \"Kirim kurir\",\n  \"nominal_donasi\": 0,\n  \"items\": [\n    {\n      \"id_produk\": 1\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/pesanan",
@@ -753,7 +754,7 @@
               "raw": "{\n  \"status_pesanan\": \"dibayar\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/admin/pesanan/1/status",
+              "raw": "{{base_url}}/api/admin/pesanan/{{pesanan_id}}/status",
               "host": [
                 "{{base_url}}"
               ],
@@ -761,7 +762,7 @@
                 "api",
                 "admin",
                 "pesanan",
-                "1",
+                "{{pesanan_id}}",
                 "status"
               ]
             }
@@ -803,7 +804,7 @@
               "raw": "{\n  \"status_pesanan\": \"menunggu_pembayaran\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/admin/pesanan/1/status",
+              "raw": "{{base_url}}/api/admin/pesanan/{{pesanan_id}}/status",
               "host": [
                 "{{base_url}}"
               ],
@@ -811,7 +812,7 @@
                 "api",
                 "admin",
                 "pesanan",
-                "1",
+                "{{pesanan_id}}",
                 "status"
               ]
             }
