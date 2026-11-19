@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/donasi/penyaluran"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "nominal": 50000,
+      "keterangan": "Penyaluran sembako & santunan panti asuhan"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201 Created', function () {
+          pm.response.to.have.status(201);
+      });
+      pm.test('Penyaluran berhasil dicatat', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('id_penyaluran');
+          pm.expect(jsonData.data.nominal).to.eql(50000);
+      });
+    language: text/javascript
+order: 1000

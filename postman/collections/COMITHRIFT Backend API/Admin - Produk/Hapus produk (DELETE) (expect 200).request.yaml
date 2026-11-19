@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/produk/4"
+method: DELETE
+headers:
+  Authorization: Bearer {{token_admin}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Pesan hapus berhasil', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data.message).to.eql('Produk berhasil dihapus.');
+      });
+    language: text/javascript
+order: 5000

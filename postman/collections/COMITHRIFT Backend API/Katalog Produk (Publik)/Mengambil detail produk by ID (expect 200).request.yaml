@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/api/produk/1"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Data detail produk valid', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('data');
+          pm.expect(jsonData.data).to.have.property('id_produk');
+          pm.expect(jsonData.data).to.have.property('nama_produk');
+      });
+    language: text/javascript
+order: 2000

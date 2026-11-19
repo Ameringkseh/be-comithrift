@@ -1,0 +1,32 @@
+$kind: http-request
+name: P-03 - Checkout produk yang tidak tersedia / sudah dipesan (expect 400)
+url: "{{base_url}}/api/pesanan"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nama_pembeli": "Andi Permana",
+      "kontak_whatsapp": "089876543210",
+      "metode_serah_terima": "Kirim kurir",
+      "nominal_donasi": 0,
+      "items": [
+        {
+          "id_produk": 2
+        }
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400 Bad Request (P-03)', function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test('Error code is PRODUK_TIDAK_TERSEDIA', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('PRODUK_TIDAK_TERSEDIA');
+      });
+    language: text/javascript
+order: 2000

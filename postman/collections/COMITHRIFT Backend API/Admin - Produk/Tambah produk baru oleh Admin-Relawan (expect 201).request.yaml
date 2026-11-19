@@ -1,0 +1,33 @@
+$kind: http-request
+name: Tambah produk baru oleh Admin/Relawan (expect 201)
+url: "{{base_url}}/api/admin/produk"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_relawan}}
+body:
+  type: text
+  content: |-
+    {
+      "nama_produk": "Crewneck Vintage Oversize",
+      "harga": 65000,
+      "deskripsi": "Sweater crewneck warna abu misty, bahan fleece hangat.",
+      "ukuran": "XL",
+      "kondisi": "Sangat Baik",
+      "kategori": "Sweater",
+      "foto": "https://supabase.co/storage/v1/object/public/produk/sample-crewneck.jpg",
+      "status": "tersedia"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201', function () {
+          pm.response.to.have.status(201);
+      });
+      pm.test('Produk berhasil dibuat', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('id_produk');
+          pm.expect(jsonData.data.nama_produk).to.eql('Crewneck Vintage Oversize');
+      });
+    language: text/javascript
+order: 1000

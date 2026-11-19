@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/produk"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nama_produk": "Jaket Windbreaker",
+      "harga": 50000,
+      "ukuran": "L",
+      "kondisi": "Baik",
+      "kategori": "Jaket"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 401', function () {
+          pm.response.to.have.status(401);
+      });
+      pm.test('Error code is TOKEN_TIDAK_ADA', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('TOKEN_TIDAK_ADA');
+      });
+    language: text/javascript
+order: 2000

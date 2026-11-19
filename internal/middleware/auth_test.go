@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -70,6 +71,25 @@ func TestVerifyJWT(t *testing.T) {
 	resp, err = app.Test(reqValid)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200 with valid token, got status: %d", resp.StatusCode)
+	}
+
+	// 4. Token valid ditandatangani dengan secret Base64 (standar Supabase Cloud) -> 200
+	rawSecretBytes := []byte("1234567890123456789012345678901234567890123456789012345678901234") // 64 bytes
+	base64Secret := base64.StdEncoding.EncodeToString(rawSecretBytes)
+	appB64 := fiber.New()
+	appB64.Get("/test-b64", middleware.VerifyJWT(base64Secret), func(c *fiber.Ctx) error {
+		return c.SendStatus(http.StatusOK)
+	})
+	tokenB64 := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "user-b64",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	signedB64, _ := tokenB64.SignedString(rawSecretBytes)
+	reqB64 := httptest.NewRequest(http.MethodGet, "/test-b64", nil)
+	reqB64.Header.Set("Authorization", "Bearer "+signedB64)
+	respB64, err := appB64.Test(reqB64)
+	if err != nil || respB64.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 with base64 Supabase secret, got: %d", respB64.StatusCode)
 	}
 }
 

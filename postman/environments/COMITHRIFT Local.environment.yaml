@@ -1,0 +1,20 @@
+name: COMITHRIFT Local
+values:
+  - key: base_url
+    value: 'http://localhost:8080'
+  - key: token_admin
+    value: ''
+  - key: token_relawan
+    value: ''
+  - key: supabase_url
+    value: ''
+  - key: supabase_publishable_key
+    value: ''
+  - key: admin_email
+    value: ''
+  - key: admin_password
+    value: ''
+  - key: relawan_email
+    value: ''
+  - key: relawan_password
+    value: ''

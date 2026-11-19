@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/rekap"
+method: GET
+headers:
+  Authorization: Bearer {{token_admin}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 OK (T-14)', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Data rekapitulasi lengkap', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('pesanan');
+          pm.expect(jsonData.data).to.have.property('total_penjualan');
+          pm.expect(jsonData.data).to.have.property('donasi');
+          pm.expect(jsonData.data).to.have.property('produk');
+      });
+    language: text/javascript
+order: 3000

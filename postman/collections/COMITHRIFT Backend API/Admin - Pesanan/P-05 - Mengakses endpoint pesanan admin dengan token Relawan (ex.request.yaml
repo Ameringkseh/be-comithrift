@@ -1,0 +1,18 @@
+$kind: http-request
+name: P-05 - Mengakses endpoint pesanan admin dengan token Relawan (expect 403)
+url: "{{base_url}}/api/admin/pesanan"
+method: GET
+headers:
+  Authorization: Bearer {{token_relawan}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 403 Forbidden (P-05)', function () {
+          pm.response.to.have.status(403);
+      });
+      pm.test('Error code is AKSES_DITOLAK', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('AKSES_DITOLAK');
+      });
+    language: text/javascript
+order: 3000

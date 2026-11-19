@@ -1,0 +1,29 @@
+$kind: http-request
+name: Tambah produk dengan input tidak valid (harga negatif) (expect 400)
+url: "{{base_url}}/api/admin/produk"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_relawan}}
+body:
+  type: text
+  content: |-
+    {
+      "nama_produk": "Baju Rusak",
+      "harga": -1000,
+      "ukuran": "M",
+      "kondisi": "Bekas",
+      "kategori": "Kaos"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400', function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test('Error code is VALIDASI_GAGAL', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('VALIDASI_GAGAL');
+      });
+    language: text/javascript
+order: 3000

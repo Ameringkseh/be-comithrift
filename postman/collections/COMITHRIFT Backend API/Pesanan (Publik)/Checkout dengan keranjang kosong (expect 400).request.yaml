@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/api/pesanan"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nama_pembeli": "Budi",
+      "kontak_whatsapp": "081234567890",
+      "metode_serah_terima": "Ambil di tempat",
+      "items": []
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400 Bad Request', function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test('Error code is VALIDASI_GAGAL', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('VALIDASI_GAGAL');
+      });
+    language: text/javascript
+order: 3000

@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{supabase_url}}/auth/v1/token?grant_type=password"
+method: POST
+headers:
+  apikey: "{{supabase_publishable_key}}"
+  Content-Type: application/json
+queryParams:
+  grant_type: password
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{relawan_email}}",
+      "password": "{{relawan_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Simpan token_relawan ke environment', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('access_token');
+          pm.environment.set('token_relawan', jsonData.access_token);
+      });
+    language: text/javascript
+order: 2000

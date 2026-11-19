@@ -1,0 +1,21 @@
+$kind: http-request
+name: P-01 - Mengambil daftar produk katalog dengan filter (expect 200)
+url: "{{base_url}}/api/produk?kategori=Jaket&ukuran=L"
+method: GET
+queryParams:
+  kategori: Jaket
+  ukuran: L
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Response format matches convention', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('data');
+          pm.expect(jsonData).to.have.property('meta');
+          pm.expect(Array.isArray(jsonData.data)).to.be.true;
+      });
+    language: text/javascript
+order: 1000

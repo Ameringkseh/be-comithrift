@@ -1,0 +1,26 @@
+$kind: http-request
+name: P-07 - Mencatat penyaluran donasi melebihi saldo tersedia (expect 400)
+url: "{{base_url}}/api/admin/donasi/penyaluran"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "nominal": 999999999,
+      "keterangan": "Penyaluran fiktif melebihi saldo tersedia"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400 Bad Request (P-07)', function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test('Error code is NOMINAL_MELEBIHI_SALDO', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('NOMINAL_MELEBIHI_SALDO');
+      });
+    language: text/javascript
+order: 2000

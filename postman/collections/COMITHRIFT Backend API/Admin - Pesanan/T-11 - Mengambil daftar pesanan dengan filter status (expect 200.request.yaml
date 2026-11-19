@@ -1,0 +1,22 @@
+$kind: http-request
+name: T-11 - Mengambil daftar pesanan dengan filter status (expect 200)
+url: "{{base_url}}/api/admin/pesanan?status=dibayar"
+method: GET
+headers:
+  Authorization: Bearer {{token_admin}}
+queryParams:
+  status: dibayar
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Seluruh item berstatus dibayar', function () {
+          const jsonData = pm.response.json();
+          jsonData.data.forEach(function(item) {
+              pm.expect(item.status_pesanan).to.eql('dibayar');
+          });
+      });
+    language: text/javascript
+order: 2000

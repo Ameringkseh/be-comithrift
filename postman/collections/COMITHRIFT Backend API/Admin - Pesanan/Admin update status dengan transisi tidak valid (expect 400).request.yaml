@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/pesanan/1/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "status_pesanan": "menunggu_pembayaran"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400 Bad Request', function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test('Error code is TRANSISI_TIDAK_VALID', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.error.code).to.eql('TRANSISI_TIDAK_VALID');
+      });
+    language: text/javascript
+order: 5000

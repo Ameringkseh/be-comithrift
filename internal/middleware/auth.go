@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -23,10 +24,28 @@ func RespondError(c *fiber.Ctx, statusCode int, code string, message string) err
 	})
 }
 
+// parseJWTSecret mengonversi secret string ke byte array.
+// Supabase Cloud JWT secret berformat Base64 (64 bytes/512-bit, 88 karakter).
+// Jika format base64 valid, gunakan hasil decode; jika bukan (misal plain string di unit test), gunakan []byte(secret).
+func parseJWTSecret(secret string) []byte {
+	trimmed := strings.TrimSpace(secret)
+	if len(trimmed) == 88 || strings.HasSuffix(trimmed, "=") {
+		if decoded, err := base64.StdEncoding.DecodeString(trimmed); err == nil && len(decoded) > 0 {
+			return decoded
+		}
+	}
+	if decoded, err := base64.StdEncoding.DecodeString(trimmed); err == nil && len(decoded) >= 32 {
+		return decoded
+	}
+	return []byte(secret)
+}
+
 // VerifyJWT memverifikasi token JWT Supabase Auth pada request
 // Mengembalikan 401 Unauthorized jika token tidak ada, tidak valid, atau kedaluwarsa (P-04).
 // Sumber: .agents/skills/supabase-jwt-auth-middleware/SKILL.md & .agents/rules/30-security.md
 func VerifyJWT(secret string) fiber.Handler {
+	secretBytes := parseJWTSecret(secret)
+
 	return func(c *fiber.Ctx) error {
 		header := c.Get("Authorization")
 		if !strings.HasPrefix(header, "Bearer ") {
@@ -41,7 +60,7 @@ func VerifyJWT(secret string) fiber.Handler {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("algoritma token tidak didukung: %v", t.Header["alg"])
 			}
-			return []byte(secret), nil
+			return secretBytes, nil
 		})
 
 		if err != nil || !token.Valid {

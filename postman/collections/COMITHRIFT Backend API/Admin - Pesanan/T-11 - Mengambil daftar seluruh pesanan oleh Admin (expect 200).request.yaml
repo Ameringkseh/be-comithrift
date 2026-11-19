@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/pesanan"
+method: GET
+headers:
+  Authorization: Bearer {{token_admin}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 OK (T-11)', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Format response memuat data array dan meta', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('data');
+          pm.expect(jsonData).to.have.property('meta');
+          pm.expect(Array.isArray(jsonData.data)).to.be.true;
+      });
+    language: text/javascript
+order: 1000

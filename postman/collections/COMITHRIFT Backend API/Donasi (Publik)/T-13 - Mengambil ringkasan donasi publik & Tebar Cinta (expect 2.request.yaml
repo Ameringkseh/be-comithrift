@@ -1,0 +1,19 @@
+$kind: http-request
+name: T-13 - Mengambil ringkasan donasi publik & Tebar Cinta (expect 200)
+url: "{{base_url}}/api/donasi/ringkasan"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 OK (T-13)', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Format ringkasan donasi lengkap', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('total_terkumpul');
+          pm.expect(jsonData.data).to.have.property('total_tersalurkan');
+          pm.expect(jsonData.data).to.have.property('saldo_donasi');
+          pm.expect(jsonData.data).to.have.property('riwayat_penyaluran');
+      });
+    language: text/javascript
+order: 1000

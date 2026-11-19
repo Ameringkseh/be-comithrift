@@ -5,7 +5,8 @@ workspace:
 # Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
 
 cloudResources:
-  collections: {}
+  collections:
+    ../postman/collections/COMITHRIFT Backend API: 0ac595a5-a54e-4a81-9882-fde3dc80d027
 
 # All resources in the `postman/` folder are automatically registered in Local View.
 # Point to additional files outside the `postman/` folder to register them individually. Example:

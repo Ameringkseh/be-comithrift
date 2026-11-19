@@ -1,0 +1,35 @@
+$kind: http-request
+url: "{{base_url}}/api/pesanan"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nama_pembeli": "Budi Santoso",
+      "kontak_whatsapp": "081234567890",
+      "metode_serah_terima": "Ambil di tempat",
+      "nominal_donasi": 15000,
+      "catatan": "Ambil hari sabtu sore",
+      "items": [
+        {
+          "id_produk": 1
+        }
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201 Created (P-02)', function () {
+          pm.response.to.have.status(201);
+      });
+      pm.test('Data pesanan berhasil dibuat dengan kode unik', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('id_pesanan');
+          pm.expect(jsonData.data).to.have.property('kode_pesanan');
+          pm.expect(jsonData.data.status_pesanan).to.eql('menunggu_pembayaran');
+          pm.expect(jsonData.data.total_belanja).to.be.above(0);
+      });
+    language: text/javascript
+order: 1000

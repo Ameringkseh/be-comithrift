@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{base_url}}/api/admin/pesanan/1/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "status_pesanan": "dibayar"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 OK (P-06 / T-12)', function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test('Status pesanan berhasil berubah menjadi dibayar', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.data.status_pesanan).to.eql('dibayar');
+          pm.expect(jsonData.data).to.have.property('id_pencatat');
+      });
+    language: text/javascript
+order: 4000
