@@ -40,6 +40,15 @@ type CreatePesananRequest struct {
 }
 
 // Create menangani endpoint publik POST /api/pesanan (F-02, F-03, F-04, F-05, P-02, P-03)
+// @Summary      Buat Pesanan Baru (Checkout)
+// @Description  Membuat pesanan baru secara atomik dengan mengunci baris produk, menghitung ulang total belanja, dan menyertakan donasi sukarela
+// @Tags         Pesanan (Publik)
+// @Accept       json
+// @Produce      json
+// @Param        request  body      CreatePesananRequest  true  "Data checkout pesanan"
+// @Success      201      {object}  PesananSingleResponse
+// @Failure      400      {object}  ErrorResponse
+// @Router       /api/pesanan [post]
 func (h *PesananHandler) Create(c *fiber.Ctx) error {
 	var req CreatePesananRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -78,6 +87,16 @@ func (h *PesananHandler) Create(c *fiber.Ctx) error {
 }
 
 // GetList menangani endpoint admin GET /api/admin/pesanan dengan filter status (F-08)
+// @Summary      Daftar Seluruh Pesanan
+// @Description  Mengambil daftar pesanan pelanggan dengan filter status opsional (khusus peran Admin)
+// @Tags         Pesanan (Admin)
+// @Produce      json
+// @Security     BearerAuth
+// @Param        status  query     string  false  "Filter status pesanan (menunggu_pembayaran, dibayar, selesai, dibatalkan)"
+// @Success      200     {object}  PesananListResponse
+// @Failure      401     {object}  ErrorResponse
+// @Failure      403     {object}  ErrorResponse
+// @Router       /api/admin/pesanan [get]
 func (h *PesananHandler) GetList(c *fiber.Ctx) error {
 	filter := services.PesananFilter{
 		Status: c.Query("status"),
@@ -104,6 +123,20 @@ type UpdateStatusPesananRequest struct {
 
 // UpdateStatus menangani endpoint admin PATCH /api/admin/pesanan/:id/status (F-08, P-06)
 // Mengikuti aturan state machine & transaksi atomik dari .agents/skills/order-status-lifecycle/SKILL.md
+// @Summary      Perbarui Status Pesanan
+// @Description  Memperbarui status pesanan (misal verifikasi pembayaran atau pembatalan) sesuai alur state machine
+// @Tags         Pesanan (Admin)
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path      int                         true  "ID Pesanan"
+// @Param        request  body      UpdateStatusPesananRequest  true  "Status baru pesanan"
+// @Success      200      {object}  PesananSingleResponse
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      403      {object}  ErrorResponse
+// @Failure      404      {object}  ErrorResponse
+// @Router       /api/admin/pesanan/{id}/status [patch]
 func (h *PesananHandler) UpdateStatus(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)

@@ -32,6 +32,13 @@ type CreatePenyaluranRequest struct {
 
 // GetRingkasan menangani endpoint publik GET /api/donasi/ringkasan (F-10, T-13)
 // Menampilkan akumulasi donasi terkumpul, donasi tersalurkan, saldo donasi, serta riwayat penyaluran
+// @Summary      Ringkasan Transparansi Donasi
+// @Description  Mengambil ringkasan akumulasi donasi terkumpul, donasi tersalurkan, saldo donasi, riwayat penyaluran, dan info program Tebar Cinta
+// @Tags         Donasi (Publik)
+// @Produce      json
+// @Success      200  {object}  RingkasanDonasiResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/donasi/ringkasan [get]
 func (h *DonasiHandler) GetRingkasan(c *fiber.Ctx) error {
 	ringkasan, err := h.service.GetRingkasan(c.Context())
 	if err != nil {
@@ -45,6 +52,18 @@ func (h *DonasiHandler) GetRingkasan(c *fiber.Ctx) error {
 
 // CatatPenyaluran menangani endpoint admin POST /api/admin/donasi/penyaluran (F-09, P-07)
 // Wajib memvalidasi nominal tidak melebihi saldo donasi tersedia (aturan #6 20-data-model.md)
+// @Summary      Catat Penyaluran Donasi
+// @Description  Mencatat kegiatan penyaluran donasi ke penerima manfaat oleh Admin (nominal tidak boleh melebihi saldo kas donasi yang tersedia)
+// @Tags         Donasi (Admin)
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      CreatePenyaluranRequest  true  "Data penyaluran donasi"
+// @Success      201      {object}  PenyaluranDonasiResponse
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      403      {object}  ErrorResponse
+// @Router       /api/admin/donasi/penyaluran [post]
 func (h *DonasiHandler) CatatPenyaluran(c *fiber.Ctx) error {
 	var req CreatePenyaluranRequest
 	if err := c.BodyParser(&req); err != nil {

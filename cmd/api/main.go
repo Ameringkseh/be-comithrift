@@ -1,8 +1,20 @@
+// @title                      COMITHRIFT Backend API
+// @version                    1.0
+// @description                REST API Backend untuk Platform Pemasaran Pakaian Bekas & Donasi Tebar Cinta (COMITHRIFT).
+// @contact.name               Rafli Mochamad Ramadhan (Backend Developer)
+// @license.name               MIT
+// @host                       localhost:8080
+// @BasePath                   /
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Masukkan token JWT dengan format 'Bearer <token>'
 package main
 
 import (
 	"log"
 
+	_ "be-comithrift/docs"
 	"be-comithrift/internal/config"
 	"be-comithrift/internal/db"
 	"be-comithrift/internal/handlers"
@@ -14,6 +26,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/swagger"
 )
 
 func main() {
@@ -49,6 +62,9 @@ func main() {
 
 	// Endpoint Health-check (Fase 0.3)
 	app.Get("/healthz", handlers.HealthCheckHandler)
+
+	// Swagger UI Documentation
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Inisialisasi Service & Handler
 	produkService := services.NewProdukService(gormDB)

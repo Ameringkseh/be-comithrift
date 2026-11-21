@@ -30,6 +30,7 @@ scripts:
           pm.expect(jsonData.data).to.have.property('kode_pesanan');
           pm.expect(jsonData.data.status_pesanan).to.eql('menunggu_pembayaran');
           pm.expect(jsonData.data.total_belanja).to.be.above(0);
+          pm.environment.set('pesanan_id', jsonData.data.id_pesanan);
       });
     language: text/javascript
 order: 1000

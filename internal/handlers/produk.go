@@ -69,7 +69,17 @@ func MapServiceError(c *fiber.Ctx, err error) error {
 	}
 }
 
-// GET /api/produk (Publik) — Filter kategori & ukuran
+// GetList menangani GET /api/produk (Publik) — Filter kategori & ukuran
+// @Summary      Daftar Katalog Produk
+// @Description  Mengambil daftar produk pakaian bekas yang tersedia untuk katalog publik dengan filter opsional
+// @Tags         Produk (Publik)
+// @Produce      json
+// @Param        kategori  query     string  false  "Filter kategori produk (misal: Jaket, Kemeja, Kaos)"
+// @Param        ukuran    query     string  false  "Filter ukuran produk (misal: S, M, L, XL)"
+// @Param        status    query     string  false  "Filter status produk (default: tersedia)"
+// @Success      200       {object}  ProdukListResponse
+// @Failure      500       {object}  ErrorResponse
+// @Router       /api/produk [get]
 func (h *ProdukHandler) GetList(c *fiber.Ctx) error {
 	filter := services.ProdukFilter{
 		Kategori: c.Query("kategori"),
@@ -90,7 +100,16 @@ func (h *ProdukHandler) GetList(c *fiber.Ctx) error {
 	})
 }
 
-// GET /api/produk/:id (Publik) — Detail produk
+// GetByID menangani GET /api/produk/:id (Publik) — Detail produk
+// @Summary      Detail Produk
+// @Description  Mengambil rincian informasi satu produk berdasarkan ID produk
+// @Tags         Produk (Publik)
+// @Produce      json
+// @Param        id   path      int  true  "ID Produk"
+// @Success      200  {object}  ProdukSingleResponse
+// @Failure      400  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Router       /api/produk/{id} [get]
 func (h *ProdukHandler) GetByID(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
@@ -108,7 +127,19 @@ func (h *ProdukHandler) GetByID(c *fiber.Ctx) error {
 	})
 }
 
-// POST /api/admin/produk (Relawan, Admin)
+// Create menangani POST /api/admin/produk (Relawan, Admin)
+// @Summary      Tambah Produk Baru
+// @Description  Menambahkan produk baru ke katalog oleh Relawan atau Admin
+// @Tags         Produk (Admin/Relawan)
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      CreateProdukRequest  true  "Data produk baru"
+// @Success      201      {object}  ProdukSingleResponse
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      403      {object}  ErrorResponse
+// @Router       /api/admin/produk [post]
 func (h *ProdukHandler) Create(c *fiber.Ctx) error {
 	var req CreateProdukRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -140,7 +171,21 @@ func (h *ProdukHandler) Create(c *fiber.Ctx) error {
 	})
 }
 
-// PATCH /api/admin/produk/:id (Relawan, Admin)
+// Update menangani PATCH /api/admin/produk/:id (Relawan, Admin)
+// @Summary      Perbarui Data Produk
+// @Description  Memperbarui informasi atau status produk oleh Relawan atau Admin
+// @Tags         Produk (Admin/Relawan)
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path      int                  true  "ID Produk"
+// @Param        request  body      UpdateProdukRequest  true  "Field produk yang akan diperbarui"
+// @Success      200      {object}  ProdukSingleResponse
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      403      {object}  ErrorResponse
+// @Failure      404      {object}  ErrorResponse
+// @Router       /api/admin/produk/{id} [patch]
 func (h *ProdukHandler) Update(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
@@ -178,7 +223,19 @@ func (h *ProdukHandler) Update(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE /api/admin/produk/:id (Relawan, Admin)
+// Delete menangani DELETE /api/admin/produk/:id (Relawan, Admin)
+// @Summary      Hapus Produk
+// @Description  Menghapus produk dari katalog jika tidak sedang berada dalam pesanan aktif
+// @Tags         Produk (Admin/Relawan)
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "ID Produk"
+// @Success      200  {object}  DeleteSuccessResponse
+// @Failure      400  {object}  ErrorResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Router       /api/admin/produk/{id} [delete]
 func (h *ProdukHandler) Delete(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)

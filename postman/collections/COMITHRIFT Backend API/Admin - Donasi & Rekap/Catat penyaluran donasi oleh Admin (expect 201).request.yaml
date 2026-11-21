@@ -8,7 +8,7 @@ body:
   type: text
   content: |-
     {
-      "nominal": 50000,
+      "nominal": 10000,
       "keterangan": "Penyaluran sembako & santunan panti asuhan"
     }
 scripts:
@@ -20,7 +20,7 @@ scripts:
       pm.test('Penyaluran berhasil dicatat', function () {
           const jsonData = pm.response.json();
           pm.expect(jsonData.data).to.have.property('id_penyaluran');
-          pm.expect(jsonData.data.nominal).to.eql(50000);
+          pm.expect(jsonData.data.nominal).to.eql(10000);
       });
     language: text/javascript
 order: 1000

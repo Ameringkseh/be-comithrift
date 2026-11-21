@@ -1,0 +1,776 @@
+basePath: /
+definitions:
+  handlers.CreatePenyaluranRequest:
+    properties:
+      keterangan:
+        type: string
+      nominal:
+        type: integer
+      tanggal:
+        type: string
+    required:
+    - keterangan
+    - nominal
+    type: object
+  handlers.CreatePesananRequest:
+    properties:
+      catatan:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/handlers.ItemPesananReq'
+        minItems: 1
+        type: array
+      kontak_whatsapp:
+        type: string
+      metode_serah_terima:
+        type: string
+      nama_pembeli:
+        type: string
+      nominal_donasi:
+        minimum: 0
+        type: integer
+    required:
+    - items
+    - kontak_whatsapp
+    - metode_serah_terima
+    - nama_pembeli
+    type: object
+  handlers.CreateProdukRequest:
+    properties:
+      deskripsi:
+        type: string
+      foto:
+        description: URL / path Supabase Storage yang sudah diunggah klien
+        type: string
+      harga:
+        type: integer
+      kategori:
+        type: string
+      kondisi:
+        type: string
+      nama_produk:
+        type: string
+      status:
+        enum:
+        - tersedia
+        - dipesan
+        - terjual
+        type: string
+      ukuran:
+        type: string
+    required:
+    - harga
+    - kategori
+    - kondisi
+    - nama_produk
+    - ukuran
+    type: object
+  handlers.DeleteSuccessData:
+    properties:
+      message:
+        example: Produk berhasil dihapus.
+        type: string
+    type: object
+  handlers.DeleteSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.DeleteSuccessData'
+    type: object
+  handlers.ErrorDetail:
+    properties:
+      code:
+        example: TIDAK_DITEMUKAN
+        type: string
+      message:
+        example: Data tidak ditemukan.
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/handlers.ErrorDetail'
+    type: object
+  handlers.HealthResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.HealthResponseData'
+    type: object
+  handlers.HealthResponseData:
+    properties:
+      database:
+        example: connected
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  handlers.ItemPesananReq:
+    properties:
+      id_produk:
+        type: integer
+    required:
+    - id_produk
+    type: object
+  handlers.MetaTotal:
+    properties:
+      total:
+        example: 4
+        type: integer
+    type: object
+  handlers.PenyaluranDonasiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.PenyaluranDonasi'
+    type: object
+  handlers.PesananListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Pesanan'
+        type: array
+      meta:
+        $ref: '#/definitions/handlers.MetaTotal'
+    type: object
+  handlers.PesananSingleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Pesanan'
+    type: object
+  handlers.ProdukListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Produk'
+        type: array
+      meta:
+        $ref: '#/definitions/handlers.MetaTotal'
+    type: object
+  handlers.ProdukSingleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Produk'
+    type: object
+  handlers.RekapDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/services.RekapResponse'
+    type: object
+  handlers.RingkasanDonasiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/services.RingkasanDonasi'
+    type: object
+  handlers.UpdateProdukRequest:
+    properties:
+      deskripsi:
+        type: string
+      foto:
+        type: string
+      harga:
+        type: integer
+      kategori:
+        type: string
+      kondisi:
+        type: string
+      nama_produk:
+        type: string
+      status:
+        enum:
+        - tersedia
+        - dipesan
+        - terjual
+        type: string
+      ukuran:
+        type: string
+    type: object
+  handlers.UpdateStatusPesananRequest:
+    properties:
+      status:
+        description: alias opsional
+        type: string
+      status_pesanan:
+        type: string
+    type: object
+  models.InfoProgram:
+    properties:
+      created_at:
+        type: string
+      deskripsi_program:
+        type: string
+      id_info:
+        type: integer
+      info_pembayaran:
+        type: string
+      kontak_whatsapp_admin:
+        type: string
+      nama_yayasan:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ItemPesanan:
+    properties:
+      created_at:
+        type: string
+      harga_saat_pesan:
+        type: integer
+      id_item:
+        type: integer
+      id_pesanan:
+        type: integer
+      id_produk:
+        type: integer
+      pesanan:
+        $ref: '#/definitions/models.Pesanan'
+      produk:
+        $ref: '#/definitions/models.Produk'
+      updated_at:
+        type: string
+    type: object
+  models.PenyaluranDonasi:
+    properties:
+      created_at:
+        type: string
+      id_pencatat:
+        type: string
+      id_penyaluran:
+        type: integer
+      keterangan:
+        type: string
+      nominal:
+        type: integer
+      pencatat:
+        $ref: '#/definitions/models.ProfilPengguna'
+      tanggal:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Pesanan:
+    properties:
+      catatan:
+        type: string
+      created_at:
+        type: string
+      id_pencatat:
+        type: string
+      id_pesanan:
+        type: integer
+      item_pesanan:
+        items:
+          $ref: '#/definitions/models.ItemPesanan'
+        type: array
+      kode_pesanan:
+        type: string
+      kontak_whatsapp:
+        type: string
+      metode_serah_terima:
+        type: string
+      nama_pembeli:
+        type: string
+      nominal_donasi:
+        type: integer
+      pencatat:
+        $ref: '#/definitions/models.ProfilPengguna'
+      status_pesanan:
+        type: string
+      tanggal:
+        type: string
+      total_belanja:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.Produk:
+    properties:
+      created_at:
+        type: string
+      deskripsi:
+        type: string
+      foto:
+        description: URL atau path storage Supabase
+        type: string
+      harga:
+        type: integer
+      id_produk:
+        type: integer
+      kategori:
+        type: string
+      kondisi:
+        type: string
+      nama_produk:
+        type: string
+      status:
+        type: string
+      ukuran:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ProfilPengguna:
+    properties:
+      created_at:
+        type: string
+      id_pengguna:
+        type: string
+      nama:
+        type: string
+      peran:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  services.DonasiRekap:
+    properties:
+      saldo_donasi:
+        type: integer
+      total_terkumpul:
+        type: integer
+      total_tersalurkan:
+        type: integer
+    type: object
+  services.PesananRekap:
+    properties:
+      dibatalkan:
+        type: integer
+      dibayar:
+        type: integer
+      menunggu_pembayaran:
+        type: integer
+      selesai:
+        type: integer
+      total:
+        type: integer
+    type: object
+  services.ProdukRekap:
+    properties:
+      dipesan:
+        type: integer
+      terjual:
+        type: integer
+      tersedia:
+        type: integer
+      total:
+        type: integer
+    type: object
+  services.RekapResponse:
+    properties:
+      donasi:
+        $ref: '#/definitions/services.DonasiRekap'
+      pesanan:
+        $ref: '#/definitions/services.PesananRekap'
+      produk:
+        $ref: '#/definitions/services.ProdukRekap'
+      total_penjualan:
+        type: integer
+    type: object
+  services.RingkasanDonasi:
+    properties:
+      info_program:
+        $ref: '#/definitions/models.InfoProgram'
+      riwayat_penyaluran:
+        items:
+          $ref: '#/definitions/models.PenyaluranDonasi'
+        type: array
+      saldo_donasi:
+        type: integer
+      total_terkumpul:
+        type: integer
+      total_tersalurkan:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Rafli Mochamad Ramadhan (Backend Developer)
+  description: REST API Backend untuk Platform Pemasaran Pakaian Bekas & Donasi Tebar
+    Cinta (COMITHRIFT).
+  license:
+    name: MIT
+  title: COMITHRIFT Backend API
+  version: "1.0"
+paths:
+  /api/admin/donasi/penyaluran:
+    post:
+      consumes:
+      - application/json
+      description: Mencatat kegiatan penyaluran donasi ke penerima manfaat oleh Admin
+        (nominal tidak boleh melebihi saldo kas donasi yang tersedia)
+      parameters:
+      - description: Data penyaluran donasi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePenyaluranRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.PenyaluranDonasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Catat Penyaluran Donasi
+      tags:
+      - Donasi (Admin)
+  /api/admin/pesanan:
+    get:
+      description: Mengambil daftar pesanan pelanggan dengan filter status opsional
+        (khusus peran Admin)
+      parameters:
+      - description: Filter status pesanan (menunggu_pembayaran, dibayar, selesai,
+          dibatalkan)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.PesananListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Daftar Seluruh Pesanan
+      tags:
+      - Pesanan (Admin)
+  /api/admin/pesanan/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Memperbarui status pesanan (misal verifikasi pembayaran atau pembatalan)
+        sesuai alur state machine
+      parameters:
+      - description: ID Pesanan
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status baru pesanan
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateStatusPesananRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.PesananSingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Perbarui Status Pesanan
+      tags:
+      - Pesanan (Admin)
+  /api/admin/produk:
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan produk baru ke katalog oleh Relawan atau Admin
+      parameters:
+      - description: Data produk baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateProdukRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.ProdukSingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Tambah Produk Baru
+      tags:
+      - Produk (Admin/Relawan)
+  /api/admin/produk/{id}:
+    delete:
+      description: Menghapus produk dari katalog jika tidak sedang berada dalam pesanan
+        aktif
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DeleteSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus Produk
+      tags:
+      - Produk (Admin/Relawan)
+    patch:
+      consumes:
+      - application/json
+      description: Memperbarui informasi atau status produk oleh Relawan atau Admin
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Field produk yang akan diperbarui
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateProdukRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ProdukSingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Perbarui Data Produk
+      tags:
+      - Produk (Admin/Relawan)
+  /api/admin/rekap:
+    get:
+      description: Mengambil statistik rekapitulasi jumlah pesanan per status, total
+        penjualan, donasi, dan inventaris produk
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RekapDataResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Rekapitulasi Data Penjualan & Donasi
+      tags:
+      - Rekapitulasi (Admin)
+  /api/donasi/ringkasan:
+    get:
+      description: Mengambil ringkasan akumulasi donasi terkumpul, donasi tersalurkan,
+        saldo donasi, riwayat penyaluran, dan info program Tebar Cinta
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RingkasanDonasiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Ringkasan Transparansi Donasi
+      tags:
+      - Donasi (Publik)
+  /api/pesanan:
+    post:
+      consumes:
+      - application/json
+      description: Membuat pesanan baru secara atomik dengan mengunci baris produk,
+        menghitung ulang total belanja, dan menyertakan donasi sukarela
+      parameters:
+      - description: Data checkout pesanan
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePesananRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.PesananSingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Buat Pesanan Baru (Checkout)
+      tags:
+      - Pesanan (Publik)
+  /api/produk:
+    get:
+      description: Mengambil daftar produk pakaian bekas yang tersedia untuk katalog
+        publik dengan filter opsional
+      parameters:
+      - description: 'Filter kategori produk (misal: Jaket, Kemeja, Kaos)'
+        in: query
+        name: kategori
+        type: string
+      - description: 'Filter ukuran produk (misal: S, M, L, XL)'
+        in: query
+        name: ukuran
+        type: string
+      - description: 'Filter status produk (default: tersedia)'
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ProdukListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Daftar Katalog Produk
+      tags:
+      - Produk (Publik)
+  /api/produk/{id}:
+    get:
+      description: Mengambil rincian informasi satu produk berdasarkan ID produk
+      parameters:
+      - description: ID Produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ProdukSingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Detail Produk
+      tags:
+      - Produk (Publik)
+  /healthz:
+    get:
+      description: Memeriksa status keaktifan server REST API dan konektivitas basis
+        data Supabase
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Health Check Service
+      tags:
+      - System
+securityDefinitions:
+  BearerAuth:
+    description: Masukkan token JWT dengan format 'Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

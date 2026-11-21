@@ -1,0 +1,1173 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API Backend untuk Platform Pemasaran Pakaian Bekas \u0026 Donasi Tebar Cinta (COMITHRIFT).",
+        "title": "COMITHRIFT Backend API",
+        "contact": {
+            "name": "Rafli Mochamad Ramadhan (Backend Developer)"
+        },
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/admin/donasi/penyaluran": {
+            "post": {
+                "description": "Mencatat kegiatan penyaluran donasi ke penerima manfaat oleh Admin (nominal tidak boleh melebihi saldo kas donasi yang tersedia)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Donasi (Admin)"
+                ],
+                "summary": "Catat Penyaluran Donasi",
+                "parameters": [
+                    {
+                        "description": "Data penyaluran donasi",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePenyaluranRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PenyaluranDonasiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/pesanan": {
+            "get": {
+                "description": "Mengambil daftar pesanan pelanggan dengan filter status opsional (khusus peran Admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pesanan (Admin)"
+                ],
+                "summary": "Daftar Seluruh Pesanan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter status pesanan (menunggu_pembayaran, dibayar, selesai, dibatalkan)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PesananListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/pesanan/{id}/status": {
+            "patch": {
+                "description": "Memperbarui status pesanan (misal verifikasi pembayaran atau pembatalan) sesuai alur state machine",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pesanan (Admin)"
+                ],
+                "summary": "Perbarui Status Pesanan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID Pesanan",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status baru pesanan",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateStatusPesananRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PesananSingleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/produk": {
+            "post": {
+                "description": "Menambahkan produk baru ke katalog oleh Relawan atau Admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produk (Admin/Relawan)"
+                ],
+                "summary": "Tambah Produk Baru",
+                "parameters": [
+                    {
+                        "description": "Data produk baru",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateProdukRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProdukSingleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/produk/{id}": {
+            "delete": {
+                "description": "Menghapus produk dari katalog jika tidak sedang berada dalam pesanan aktif",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produk (Admin/Relawan)"
+                ],
+                "summary": "Hapus Produk",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID Produk",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeleteSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "description": "Memperbarui informasi atau status produk oleh Relawan atau Admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produk (Admin/Relawan)"
+                ],
+                "summary": "Perbarui Data Produk",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID Produk",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Field produk yang akan diperbarui",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateProdukRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProdukSingleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/rekap": {
+            "get": {
+                "description": "Mengambil statistik rekapitulasi jumlah pesanan per status, total penjualan, donasi, dan inventaris produk",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rekapitulasi (Admin)"
+                ],
+                "summary": "Rekapitulasi Data Penjualan \u0026 Donasi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RekapDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/donasi/ringkasan": {
+            "get": {
+                "description": "Mengambil ringkasan akumulasi donasi terkumpul, donasi tersalurkan, saldo donasi, riwayat penyaluran, dan info program Tebar Cinta",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Donasi (Publik)"
+                ],
+                "summary": "Ringkasan Transparansi Donasi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RingkasanDonasiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pesanan": {
+            "post": {
+                "description": "Membuat pesanan baru secara atomik dengan mengunci baris produk, menghitung ulang total belanja, dan menyertakan donasi sukarela",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pesanan (Publik)"
+                ],
+                "summary": "Buat Pesanan Baru (Checkout)",
+                "parameters": [
+                    {
+                        "description": "Data checkout pesanan",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePesananRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PesananSingleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/produk": {
+            "get": {
+                "description": "Mengambil daftar produk pakaian bekas yang tersedia untuk katalog publik dengan filter opsional",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produk (Publik)"
+                ],
+                "summary": "Daftar Katalog Produk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter kategori produk (misal: Jaket, Kemeja, Kaos)",
+                        "name": "kategori",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter ukuran produk (misal: S, M, L, XL)",
+                        "name": "ukuran",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter status produk (default: tersedia)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProdukListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/produk/{id}": {
+            "get": {
+                "description": "Mengambil rincian informasi satu produk berdasarkan ID produk",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produk (Publik)"
+                ],
+                "summary": "Detail Produk",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID Produk",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProdukSingleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthz": {
+            "get": {
+                "description": "Memeriksa status keaktifan server REST API dan konektivitas basis data Supabase",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health Check Service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.CreatePenyaluranRequest": {
+            "type": "object",
+            "required": [
+                "keterangan",
+                "nominal"
+            ],
+            "properties": {
+                "keterangan": {
+                    "type": "string"
+                },
+                "nominal": {
+                    "type": "integer"
+                },
+                "tanggal": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreatePesananRequest": {
+            "type": "object",
+            "required": [
+                "items",
+                "kontak_whatsapp",
+                "metode_serah_terima",
+                "nama_pembeli"
+            ],
+            "properties": {
+                "catatan": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/handlers.ItemPesananReq"
+                    }
+                },
+                "kontak_whatsapp": {
+                    "type": "string"
+                },
+                "metode_serah_terima": {
+                    "type": "string"
+                },
+                "nama_pembeli": {
+                    "type": "string"
+                },
+                "nominal_donasi": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "handlers.CreateProdukRequest": {
+            "type": "object",
+            "required": [
+                "harga",
+                "kategori",
+                "kondisi",
+                "nama_produk",
+                "ukuran"
+            ],
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "foto": {
+                    "description": "URL / path Supabase Storage yang sudah diunggah klien",
+                    "type": "string"
+                },
+                "harga": {
+                    "type": "integer"
+                },
+                "kategori": {
+                    "type": "string"
+                },
+                "kondisi": {
+                    "type": "string"
+                },
+                "nama_produk": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "tersedia",
+                        "dipesan",
+                        "terjual"
+                    ]
+                },
+                "ukuran": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DeleteSuccessData": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Produk berhasil dihapus."
+                }
+            }
+        },
+        "handlers.DeleteSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handlers.DeleteSuccessData"
+                }
+            }
+        },
+        "handlers.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "TIDAK_DITEMUKAN"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Data tidak ditemukan."
+                }
+            }
+        },
+        "handlers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/handlers.ErrorDetail"
+                }
+            }
+        },
+        "handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handlers.HealthResponseData"
+                }
+            }
+        },
+        "handlers.HealthResponseData": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "type": "string",
+                    "example": "connected"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "handlers.ItemPesananReq": {
+            "type": "object",
+            "required": [
+                "id_produk"
+            ],
+            "properties": {
+                "id_produk": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.MetaTotal": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "example": 4
+                }
+            }
+        },
+        "handlers.PenyaluranDonasiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.PenyaluranDonasi"
+                }
+            }
+        },
+        "handlers.PesananListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Pesanan"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/handlers.MetaTotal"
+                }
+            }
+        },
+        "handlers.PesananSingleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Pesanan"
+                }
+            }
+        },
+        "handlers.ProdukListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Produk"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/handlers.MetaTotal"
+                }
+            }
+        },
+        "handlers.ProdukSingleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Produk"
+                }
+            }
+        },
+        "handlers.RekapDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.RekapResponse"
+                }
+            }
+        },
+        "handlers.RingkasanDonasiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.RingkasanDonasi"
+                }
+            }
+        },
+        "handlers.UpdateProdukRequest": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "foto": {
+                    "type": "string"
+                },
+                "harga": {
+                    "type": "integer"
+                },
+                "kategori": {
+                    "type": "string"
+                },
+                "kondisi": {
+                    "type": "string"
+                },
+                "nama_produk": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "tersedia",
+                        "dipesan",
+                        "terjual"
+                    ]
+                },
+                "ukuran": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateStatusPesananRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "alias opsional",
+                    "type": "string"
+                },
+                "status_pesanan": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InfoProgram": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi_program": {
+                    "type": "string"
+                },
+                "id_info": {
+                    "type": "integer"
+                },
+                "info_pembayaran": {
+                    "type": "string"
+                },
+                "kontak_whatsapp_admin": {
+                    "type": "string"
+                },
+                "nama_yayasan": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ItemPesanan": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "harga_saat_pesan": {
+                    "type": "integer"
+                },
+                "id_item": {
+                    "type": "integer"
+                },
+                "id_pesanan": {
+                    "type": "integer"
+                },
+                "id_produk": {
+                    "type": "integer"
+                },
+                "pesanan": {
+                    "$ref": "#/definitions/models.Pesanan"
+                },
+                "produk": {
+                    "$ref": "#/definitions/models.Produk"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PenyaluranDonasi": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id_pencatat": {
+                    "type": "string"
+                },
+                "id_penyaluran": {
+                    "type": "integer"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "nominal": {
+                    "type": "integer"
+                },
+                "pencatat": {
+                    "$ref": "#/definitions/models.ProfilPengguna"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Pesanan": {
+            "type": "object",
+            "properties": {
+                "catatan": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id_pencatat": {
+                    "type": "string"
+                },
+                "id_pesanan": {
+                    "type": "integer"
+                },
+                "item_pesanan": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ItemPesanan"
+                    }
+                },
+                "kode_pesanan": {
+                    "type": "string"
+                },
+                "kontak_whatsapp": {
+                    "type": "string"
+                },
+                "metode_serah_terima": {
+                    "type": "string"
+                },
+                "nama_pembeli": {
+                    "type": "string"
+                },
+                "nominal_donasi": {
+                    "type": "integer"
+                },
+                "pencatat": {
+                    "$ref": "#/definitions/models.ProfilPengguna"
+                },
+                "status_pesanan": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "total_belanja": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Produk": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi": {
+                    "type": "string"
+                },
+                "foto": {
+                    "description": "URL atau path storage Supabase",
+                    "type": "string"
+                },
+                "harga": {
+                    "type": "integer"
+                },
+                "id_produk": {
+                    "type": "integer"
+                },
+                "kategori": {
+                    "type": "string"
+                },
+                "kondisi": {
+                    "type": "string"
+                },
+                "nama_produk": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ukuran": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProfilPengguna": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id_pengguna": {
+                    "type": "string"
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "peran": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.DonasiRekap": {
+            "type": "object",
+            "properties": {
+                "saldo_donasi": {
+                    "type": "integer"
+                },
+                "total_terkumpul": {
+                    "type": "integer"
+                },
+                "total_tersalurkan": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.PesananRekap": {
+            "type": "object",
+            "properties": {
+                "dibatalkan": {
+                    "type": "integer"
+                },
+                "dibayar": {
+                    "type": "integer"
+                },
+                "menunggu_pembayaran": {
+                    "type": "integer"
+                },
+                "selesai": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ProdukRekap": {
+            "type": "object",
+            "properties": {
+                "dipesan": {
+                    "type": "integer"
+                },
+                "terjual": {
+                    "type": "integer"
+                },
+                "tersedia": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.RekapResponse": {
+            "type": "object",
+            "properties": {
+                "donasi": {
+                    "$ref": "#/definitions/services.DonasiRekap"
+                },
+                "pesanan": {
+                    "$ref": "#/definitions/services.PesananRekap"
+                },
+                "produk": {
+                    "$ref": "#/definitions/services.ProdukRekap"
+                },
+                "total_penjualan": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.RingkasanDonasi": {
+            "type": "object",
+            "properties": {
+                "info_program": {
+                    "$ref": "#/definitions/models.InfoProgram"
+                },
+                "riwayat_penyaluran": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.PenyaluranDonasi"
+                    }
+                },
+                "saldo_donasi": {
+                    "type": "integer"
+                },
+                "total_terkumpul": {
+                    "type": "integer"
+                },
+                "total_tersalurkan": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Masukkan token JWT dengan format 'Bearer \u003ctoken\u003e'",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

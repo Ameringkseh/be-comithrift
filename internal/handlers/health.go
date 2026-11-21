@@ -7,6 +7,12 @@ import (
 )
 
 // HealthCheckHandler menangani endpoint GET /healthz
+// @Summary      Health Check Service
+// @Description  Memeriksa status keaktifan server REST API dan konektivitas basis data Supabase
+// @Tags         System
+// @Produce      json
+// @Success      200  {object}  HealthResponse
+// @Router       /healthz [get]
 func HealthCheckHandler(c *fiber.Ctx) error {
 	status := "ok"
 	dbStatus := "connected"
