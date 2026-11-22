@@ -438,6 +438,42 @@
                 }
             }
         },
+        "/api/midtrans/notification": {
+            "post": {
+                "description": "Menerima callback webhook status pembayaran dari Midtrans, memverifikasi signature SHA-512, dan memperbarui status pesanan menjadi dibayar atau dibatalkan secara otomatis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Midtrans"
+                ],
+                "summary": "Webhook Notifikasi Midtrans",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/pesanan": {
             "post": {
                 "description": "Membuat pesanan baru secara atomik dengan mengunci baris produk, menghitung ulang total belanja, dan menyertakan donasi sukarela",
@@ -996,6 +1032,12 @@
                 },
                 "pencatat": {
                     "$ref": "#/definitions/models.ProfilPengguna"
+                },
+                "snap_redirect_url": {
+                    "type": "string"
+                },
+                "snap_token": {
+                    "type": "string"
                 },
                 "status_pesanan": {
                     "type": "string"

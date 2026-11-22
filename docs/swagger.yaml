@@ -273,6 +273,10 @@ definitions:
         type: integer
       pencatat:
         $ref: '#/definitions/models.ProfilPengguna'
+      snap_redirect_url:
+        type: string
+      snap_token:
+        type: string
       status_pesanan:
         type: string
       tanggal:
@@ -668,6 +672,32 @@ paths:
       summary: Ringkasan Transparansi Donasi
       tags:
       - Donasi (Publik)
+  /api/midtrans/notification:
+    post:
+      consumes:
+      - application/json
+      description: Menerima callback webhook status pembayaran dari Midtrans, memverifikasi
+        signature SHA-512, dan memperbarui status pesanan menjadi dibayar atau dibatalkan
+        secara otomatis
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Webhook Notifikasi Midtrans
+      tags:
+      - Midtrans
   /api/pesanan:
     post:
       consumes:

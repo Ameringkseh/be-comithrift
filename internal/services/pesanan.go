@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"time"
@@ -39,14 +40,20 @@ type PesananService interface {
 	Create(ctx context.Context, input CreatePesananInput) (*models.Pesanan, error)
 	GetList(ctx context.Context, filter PesananFilter) ([]models.Pesanan, error)
 	UpdateStatus(ctx context.Context, idPesanan uint, statusBaru string, idAdmin string) (*models.Pesanan, error)
+	UpdateStatusByKode(ctx context.Context, kodePesanan string, statusBaru string) (*models.Pesanan, error)
 }
 
 type pesananService struct {
-	db *gorm.DB
+	db          *gorm.DB
+	midtransSvc MidtransService
 }
 
-func NewPesananService(db *gorm.DB) PesananService {
-	return &pesananService{db: db}
+func NewPesananService(db *gorm.DB, midtransSvc ...MidtransService) PesananService {
+	var mSvc MidtransService
+	if len(midtransSvc) > 0 {
+		mSvc = midtransSvc[0]
+	}
+	return &pesananService{db: db, midtransSvc: mSvc}
 }
 
 // generateKodePesanan menghasilkan kode pesanan unik (contoh: CMT-20261109-AB12)
@@ -157,6 +164,25 @@ func (s *pesananService) Create(ctx context.Context, req CreatePesananInput) (*m
 		return nil, err
 	}
 
+	// Jika Midtrans Service diaktifkan, minta Snap Token untuk transaksi pembayaran
+	if s.midtransSvc != nil && (pesanan.TotalBelanja+pesanan.NominalDonasi) > 0 {
+		_ = s.db.WithContext(ctx).Preload("ItemPesanan.Produk").First(&pesanan, "id_pesanan = ?", pesanan.IDPesanan).Error
+
+		token, redirectURL, errSnap := s.midtransSvc.CreateSnapTransaction(ctx, &pesanan)
+		if errSnap == nil && token != "" {
+			pesanan.SnapToken = token
+			pesanan.SnapRedirectURL = redirectURL
+			_ = s.db.WithContext(ctx).Model(&models.Pesanan{}).
+				Where("id_pesanan = ?", pesanan.IDPesanan).
+				Updates(map[string]interface{}{
+					"snap_token":        token,
+					"snap_redirect_url": redirectURL,
+				}).Error
+		} else if errSnap != nil {
+			log.Printf("Peringatan: Gagal meminta Midtrans Snap Token untuk pesanan %s: %v", pesanan.KodePesanan, errSnap)
+		}
+	}
+
 	return &pesanan, nil
 }
 
@@ -202,9 +228,17 @@ var TransisiStatusDiizinkan = map[string][]string{
 	models.StatusPesananDibayar:            {models.StatusPesananSelesai, models.StatusPesananDibatalkan},
 }
 
-// UpdateStatus mengubah status pesanan secara atomik dan memperbarui status produk terkait
-// Sesuai state machine di .agents/skills/order-status-lifecycle/SKILL.md (F-08, P-06)
+// UpdateStatus mengubah status pesanan berdasarkan ID secara atomik dan memperbarui status produk terkait (F-08, P-06)
 func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statusBaru string, idAdmin string) (*models.Pesanan, error) {
+	return s.updateStatusInternal(ctx, "id_pesanan = ?", idPesanan, statusBaru, &idAdmin)
+}
+
+// UpdateStatusByKode mengubah status pesanan berdasarkan Kode Pesanan dari notifikasi webhook Midtrans
+func (s *pesananService) UpdateStatusByKode(ctx context.Context, kodePesanan string, statusBaru string) (*models.Pesanan, error) {
+	return s.updateStatusInternal(ctx, "kode_pesanan = ?", kodePesanan, statusBaru, nil)
+}
+
+func (s *pesananService) updateStatusInternal(ctx context.Context, queryField string, queryValue interface{}, statusBaru string, idAdmin *string) (*models.Pesanan, error) {
 	validStatuses := map[string]bool{
 		models.StatusPesananMenungguPembayaran: true,
 		models.StatusPesananDibayar:            true,
@@ -220,11 +254,16 @@ func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statu
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. SELECT ... FOR UPDATE pesanan
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			First(&pesanan, "id_pesanan = ?", idPesanan).Error; err != nil {
+			First(&pesanan, queryField, queryValue).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return fmt.Errorf("%w: pesanan dengan ID %d tidak ditemukan", ErrNotFound, idPesanan)
+				return fmt.Errorf("%w: pesanan tidak ditemukan", ErrNotFound)
 			}
 			return fmt.Errorf("gagal mengunci data pesanan: %w", err)
+		}
+
+		// Jika status sudah sesuai (misal webhook Midtrans memanggil berulang kali), idempoten
+		if pesanan.StatusPesanan == statusBaru {
+			return nil
 		}
 
 		// 2. Validasi transisi status sesuai state machine order-status-lifecycle
@@ -246,10 +285,12 @@ func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statu
 				ErrTransisiTidakValid, pesanan.StatusPesanan, statusBaru)
 		}
 
-		// 3. Update status_pesanan dan id_pencatat (admin yang memverifikasi)
+		// 3. Update status_pesanan dan id_pencatat (jika ada admin)
 		updates := map[string]interface{}{
 			"status_pesanan": statusBaru,
-			"id_pencatat":    idAdmin,
+		}
+		if idAdmin != nil {
+			updates["id_pencatat"] = *idAdmin
 		}
 		if err := tx.Model(&pesanan).Updates(updates).Error; err != nil {
 			return fmt.Errorf("gagal memperbarui status pesanan: %w", err)
@@ -258,7 +299,7 @@ func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statu
 		// 4. Efek ke status produk dalam transaksi yang sama
 		var productIDs []uint
 		if err := tx.Model(&models.ItemPesanan{}).
-			Where("id_pesanan = ?", idPesanan).
+			Where("id_pesanan = ?", pesanan.IDPesanan).
 			Pluck("id_produk", &productIDs).Error; err != nil {
 			return fmt.Errorf("gagal mengambil item pesanan: %w", err)
 		}
@@ -288,7 +329,7 @@ func (s *pesananService) UpdateStatus(ctx context.Context, idPesanan uint, statu
 		var result models.Pesanan
 		if err := tx.Preload("ItemPesanan.Produk").
 			Preload("Pencatat").
-			First(&result, "id_pesanan = ?", idPesanan).Error; err != nil {
+			First(&result, "id_pesanan = ?", pesanan.IDPesanan).Error; err != nil {
 			return fmt.Errorf("gagal memuat data pesanan yang diperbarui: %w", err)
 		}
 		pesanan = result

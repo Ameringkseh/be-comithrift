@@ -67,10 +67,12 @@ func main() {
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Inisialisasi Service & Handler
+	midtransService := services.NewMidtransService(cfg.MidtransServerKey, cfg.MidtransIsProduction)
+
 	produkService := services.NewProdukService(gormDB)
 	produkHandler := handlers.NewProdukHandler(produkService)
 
-	pesananService := services.NewPesananService(gormDB)
+	pesananService := services.NewPesananService(gormDB, midtransService)
 	pesananHandler := handlers.NewPesananHandler(pesananService)
 
 	donasiService := services.NewDonasiService(gormDB)
@@ -79,12 +81,15 @@ func main() {
 	rekapService := services.NewRekapService(gormDB)
 	rekapHandler := handlers.NewRekapHandler(rekapService)
 
-	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1, 4.4)
+	midtransHandler := handlers.NewMidtransHandler(midtransService, pesananService)
+
+	// Route Publik (Tabel 3.7 & Task 3.1, 3.2, 4.1, 4.4, 6.5)
 	api := app.Group("/api")
 	api.Get("/produk", produkHandler.GetList)
 	api.Get("/produk/:id", produkHandler.GetByID)
 	api.Post("/pesanan", pesananHandler.Create)
 	api.Get("/donasi/ringkasan", donasiHandler.GetRingkasan)
+	api.Post("/midtrans/notification", midtransHandler.HandleNotification)
 
 	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
 	admin := api.Group("/admin")
