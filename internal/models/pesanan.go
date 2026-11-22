@@ -23,6 +23,8 @@ type Pesanan struct {
 	NominalDonasi     int64           `gorm:"column:nominal_donasi;not null;default:0;check:nominal_donasi >= 0" json:"nominal_donasi"`
 	StatusPesanan     string          `gorm:"column:status_pesanan;type:varchar(30);not null;default:'menunggu_pembayaran';check:status_pesanan IN ('menunggu_pembayaran', 'dibayar', 'selesai', 'dibatalkan')" json:"status_pesanan"`
 	Catatan           string          `gorm:"column:catatan;type:text" json:"catatan"`
+	SnapToken         string          `gorm:"column:snap_token;type:varchar(255)" json:"snap_token,omitempty"`
+	SnapRedirectURL   string          `gorm:"column:snap_redirect_url;type:varchar(255)" json:"snap_redirect_url,omitempty"`
 	IDPencatat        *string         `gorm:"column:id_pencatat;type:varchar(36)" json:"id_pencatat,omitempty"`
 	Pencatat          *ProfilPengguna `gorm:"foreignKey:IDPencatat;references:IDPengguna" json:"pencatat,omitempty"`
 	ItemPesanan       []ItemPesanan   `gorm:"foreignKey:IDPesanan;references:IDPesanan" json:"item_pesanan,omitempty"`

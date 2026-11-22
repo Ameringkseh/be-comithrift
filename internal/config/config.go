@@ -8,13 +8,16 @@ import (
 )
 
 type Config struct {
-	Port                string
-	Env                 string
-	DatabaseURL         string
-	SupabaseProjectURL  string
-	SupabaseJWTSecret   string
-	CORSAllowedOrigins  string
-	LogLevel            string
+	Port                 string
+	Env                  string
+	DatabaseURL          string
+	SupabaseProjectURL   string
+	SupabaseJWTSecret    string
+	CORSAllowedOrigins   string
+	LogLevel             string
+	MidtransServerKey    string
+	MidtransClientKey    string
+	MidtransIsProduction bool
 }
 
 func LoadConfig() *Config {
@@ -32,14 +35,19 @@ func LoadConfig() *Config {
 		env = "development"
 	}
 
+	isProduction := os.Getenv("MIDTRANS_IS_PRODUCTION") == "true"
+
 	return &Config{
-		Port:               port,
-		Env:                env,
-		DatabaseURL:        os.Getenv("DATABASE_URL"),
-		SupabaseProjectURL: os.Getenv("SUPABASE_PROJECT_URL"),
-		SupabaseJWTSecret:  os.Getenv("SUPABASE_JWT_SECRET"),
-		CORSAllowedOrigins: os.Getenv("CORS_ALLOWED_ORIGINS"),
-		LogLevel:           os.Getenv("LOG_LEVEL"),
+		Port:                 port,
+		Env:                  env,
+		DatabaseURL:          os.Getenv("DATABASE_URL"),
+		SupabaseProjectURL:   os.Getenv("SUPABASE_PROJECT_URL"),
+		SupabaseJWTSecret:    os.Getenv("SUPABASE_JWT_SECRET"),
+		CORSAllowedOrigins:   os.Getenv("CORS_ALLOWED_ORIGINS"),
+		LogLevel:             os.Getenv("LOG_LEVEL"),
+		MidtransServerKey:    os.Getenv("MIDTRANS_SERVER_KEY"),
+		MidtransClientKey:    os.Getenv("MIDTRANS_CLIENT_KEY"),
+		MidtransIsProduction: isProduction,
 	}
 }
 
