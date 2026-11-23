@@ -54,8 +54,12 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(logger.New())
+	corsOrigins := cfg.CORSAllowedOrigins
+	if corsOrigins == "" {
+		corsOrigins = "*"
+	}
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: cfg.CORSAllowedOrigins,
+		AllowOrigins: corsOrigins,
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PATCH, DELETE, OPTIONS",
 	}))
@@ -90,6 +94,9 @@ func main() {
 	api.Post("/pesanan", pesananHandler.Create)
 	api.Get("/donasi/ringkasan", donasiHandler.GetRingkasan)
 	api.Post("/midtrans/notification", midtransHandler.HandleNotification)
+	if cfg.Env == "development" {
+		api.Get("/dev/tokens", handlers.DevTokensHandler(gormDB, cfg.SupabaseJWTSecret))
+	}
 
 	// Route Admin/Relawan Produk dengan Middleware JWT + Role Check (Task 3.3, 3.4, 3.5)
 	admin := api.Group("/admin")

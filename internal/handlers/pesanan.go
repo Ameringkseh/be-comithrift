@@ -36,6 +36,7 @@ type CreatePesananRequest struct {
 	MetodeSerahTerima string           `json:"metode_serah_terima" validate:"required"`
 	NominalDonasi     int64            `json:"nominal_donasi" validate:"gte=0"`
 	Catatan           string           `json:"catatan"`
+	MetodePembayaran  string           `json:"metode_pembayaran"`
 	Items             []ItemPesananReq `json:"items" validate:"required,min=1,dive"`
 }
 
@@ -72,6 +73,7 @@ func (h *PesananHandler) Create(c *fiber.Ctx) error {
 		MetodeSerahTerima: req.MetodeSerahTerima,
 		NominalDonasi:     req.NominalDonasi,
 		Catatan:           req.Catatan,
+		MetodePembayaran:  req.MetodePembayaran,
 		Items:             itemsInput,
 	}
 

@@ -28,6 +28,7 @@ type CreatePesananInput struct {
 	MetodeSerahTerima string             `json:"metode_serah_terima"`
 	NominalDonasi     int64              `json:"nominal_donasi"`
 	Catatan           string             `json:"catatan"`
+	MetodePembayaran  string             `json:"metode_pembayaran"`
 	Items             []ItemPesananInput `json:"items"`
 }
 
@@ -168,7 +169,7 @@ func (s *pesananService) Create(ctx context.Context, req CreatePesananInput) (*m
 	if s.midtransSvc != nil && (pesanan.TotalBelanja+pesanan.NominalDonasi) > 0 {
 		_ = s.db.WithContext(ctx).Preload("ItemPesanan.Produk").First(&pesanan, "id_pesanan = ?", pesanan.IDPesanan).Error
 
-		token, redirectURL, errSnap := s.midtransSvc.CreateSnapTransaction(ctx, &pesanan)
+		token, redirectURL, errSnap := s.midtransSvc.CreateSnapTransaction(ctx, &pesanan, req.MetodePembayaran)
 		if errSnap == nil && token != "" {
 			pesanan.SnapToken = token
 			pesanan.SnapRedirectURL = redirectURL

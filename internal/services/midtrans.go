@@ -17,7 +17,7 @@ import (
 
 // MidtransService mendefinisikan kontrak interaksi dengan payment gateway Midtrans
 type MidtransService interface {
-	CreateSnapTransaction(ctx context.Context, pesanan *models.Pesanan) (snapToken string, redirectURL string, err error)
+	CreateSnapTransaction(ctx context.Context, pesanan *models.Pesanan, paymentType ...string) (snapToken string, redirectURL string, err error)
 	VerifyWebhookNotification(payload map[string]interface{}) (orderID string, transactionStatus string, fraudStatus string, err error)
 }
 
@@ -43,7 +43,8 @@ func NewMidtransService(serverKey string, isProduction bool) MidtransService {
 }
 
 // CreateSnapTransaction membuat transaksi Snap dan menghasilkan token pembayaran serta redirect URL
-func (m *midtransService) CreateSnapTransaction(ctx context.Context, pesanan *models.Pesanan) (string, string, error) {
+// Mendukung filter channel spesifik jika paymentType diberikan (misal: "qris", "va", "ewallet")
+func (m *midtransService) CreateSnapTransaction(ctx context.Context, pesanan *models.Pesanan, paymentType ...string) (string, string, error) {
 	if pesanan == nil {
 		return "", "", fmt.Errorf("%w: pesanan tidak boleh nil", ErrValidasi)
 	}
@@ -86,6 +87,33 @@ func (m *midtransService) CreateSnapTransaction(ctx context.Context, pesanan *mo
 			FName: pesanan.NamaPembeli,
 			Phone: pesanan.KontakWhatsapp,
 		},
+	}
+
+	// Filter enabled_payments jika pemohon menentukan preferensi metode bayar
+	if len(paymentType) > 0 && strings.TrimSpace(paymentType[0]) != "" {
+		pType := strings.ToLower(strings.TrimSpace(paymentType[0]))
+		switch pType {
+		case "qris":
+			req.EnabledPayments = []snap.SnapPaymentType{
+				snap.PaymentTypeGopay,
+				snap.PaymentTypeShopeepay,
+				"qris",
+			}
+		case "va", "transfer bank", "virtual account":
+			req.EnabledPayments = []snap.SnapPaymentType{
+				snap.PaymentTypeBCAVA,
+				snap.PaymentTypeBNIVA,
+				snap.PaymentTypeBRIVA,
+				snap.PaymentTypePermataVA,
+				snap.PaymentTypeEChannel,
+				snap.PaymentTypeOtherVA,
+			}
+		case "ewallet", "e-wallet", "gopay":
+			req.EnabledPayments = []snap.SnapPaymentType{
+				snap.PaymentTypeGopay,
+				snap.PaymentTypeShopeepay,
+			}
+		}
 	}
 
 	resp, mErr := m.snap.CreateTransaction(req)
